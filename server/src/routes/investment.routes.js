@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import * as c from '../controllers/investment.controller.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { requireRole } from '../middlewares/requireRole.js';
+import { validate } from '../middlewares/validate.js';
+import { investLimiter } from '../middlewares/rateLimiter.js';
+import { investSchema } from '../validators/index.js';
+const router = Router();
+router.use(authenticate, requireRole('INVESTOR'));
+router.post('/', investLimiter, validate(investSchema), c.invest);
+router.get('/me', c.list);
+export default router;

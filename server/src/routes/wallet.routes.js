@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import * as c from '../controllers/wallet.controller.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { requireRole } from '../middlewares/requireRole.js';
+import { validate } from '../middlewares/validate.js';
+import { amount, verifySchema, withdrawSchema } from '../validators/index.js';
+const router = Router();
+router.use(authenticate, requireRole('INVESTOR'));
+router.get('/', c.wallet);
+router.post('/topup/order', validate(z.object({ amount })), c.order);
+router.post('/topup/verify', validate(verifySchema), c.verify);
+router.post('/withdraw', validate(withdrawSchema), c.withdraw);
+router.get('/withdrawals', c.ownWithdrawals);
+export default router;
