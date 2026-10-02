@@ -1,0 +1,14 @@
+{
+  "name": "estora", "version": "1.0.0", "private": true,
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -k -n api,web \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "demo": "concurrently -k -n api,web \"npm --prefix server run demo\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "lint": "npm --prefix server run lint && npm --prefix client run lint",
+    "seed": "npm --prefix server run seed"
+  },
+  "devDependencies": { "concurrently": "^9.1.2" },
+  "engines": { "node": ">=20.19" }
+}
