@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button, Empty } from '../components/ui';
+import { PageBack } from '../components/PageBack';
 export function ProtectedRoute() {
   const { token, user, loading, error, refresh } = useAuth();
   const location = useLocation();
@@ -20,6 +21,7 @@ export function ProtectedRoute() {
   if (error || !user)
     return (
       <main className="public-section">
+        <PageBack />
         <div className="error-state">
           <h2>We couldn’t load your profile</h2>
           <p>{error}</p>

@@ -1256,6 +1256,20 @@ footer > span {
   margin: auto;
   min-height: calc(100vh - 133px);
 }
+.page-back {
+  margin-bottom: 22px;
+}
+.page-back-button {
+  padding: 9px 14px;
+}
+.public-page-back {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px max(5vw, 24px) 0;
+}
+.public-page-back + .public-section {
+  padding-top: 32px;
+}
 .workspace .page-heading h1 {
   font-size: 30px;
 }

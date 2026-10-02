@@ -18,6 +18,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PageBack } from '../components/PageBack';
 import { useData } from '../api';
 import { compactMoney, homeFor, label } from '../utils';
 const navigation = {
@@ -92,6 +93,7 @@ export function PublicLayout() {
         </div>
       </nav>
       <main>
+        <PageBack publicPage />
         <Outlet />
       </main>
       <Footer />
@@ -213,6 +215,7 @@ export function DashboardLayout() {
           </div>
         </header>
         <main className="workspace">
+          <PageBack />
           <Outlet />
         </main>
         <footer className="dashboard-footer">
