@@ -7,6 +7,9 @@ services:
     startCommand: npm start
     healthCheckPath: /ready
     envVars:
+      # Pin the runtime because the repository requires Node 20.19 or newer.
+      - key: NODE_VERSION
+        value: 20.19.0
       - key: NODE_ENV
         value: production
       - key: PAYMENT_MODE
@@ -14,6 +17,8 @@ services:
       - key: MEDIA_MODE
         value: cloudinary
       - key: MONGO_URI
+        # Render prompts for this value when deploying this Blueprint. It is
+        # required at startup and must be an Atlas replica-set URI.
         sync: false
       - key: JWT_SECRET
         generateValue: true

@@ -10,7 +10,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 1. Monorepo scaffolding — project structure, tooling, health check
+- [x] 1. Monorepo scaffolding — project structure, tooling, health check
 
 **Goal:** Create the repository skeleton with correct folder structure, package.json files, ESLint/Prettier configs, and a single `GET /health` endpoint — no models or business logic.
 
@@ -48,7 +48,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 2. Mongoose models — all nine schemas with indexes
+- [x] 2. Mongoose models — all nine schemas with indexes
 
 **Goal:** Define all nine Mongoose schemas with correct field types, enums, indexes, and the `walletBalance` + `idempotencyKey` fields as specified in the design.
 
@@ -76,7 +76,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 3. Auth service + routes (register, login, logout, /auth/me)
+- [x] 3. Auth service + routes (register, login, logout, /auth/me)
 
 **Goal:** Implement full user registration, login, JWT issuance, logout, and profile retrieval with server-side Zod validation.
 
@@ -104,7 +104,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 4. Auth middleware stack (authenticate, requireRole, requireOwnership, validate, rateLimiter, upload)
+- [x] 4. Auth middleware stack (authenticate, requireRole, requireOwnership, validate, rateLimiter, upload)
 
 **Goal:** Implement the full Express middleware pipeline used by every protected route.
 
@@ -130,7 +130,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 5. React app skeleton (Vite, React Router v6, layouts, AuthContext, ProtectedRoute, RoleRoute)
+- [x] 5. React app skeleton (Vite, React Router v6, layouts, AuthContext, ProtectedRoute, RoleRoute)
 
 **Goal:** Set up the full React routing skeleton with role-aware layouts, auth context, and placeholder pages for every route defined in the design.
 
@@ -165,7 +165,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 6. Property service + status machine + Zod validators
+- [x] 6. Property service + status machine + Zod validators
 
 **Goal:** Implement the property service with all CRUD operations, the eight-state machine, and server-side Zod validation.
 
@@ -188,7 +188,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 7. Property API routes (POST, PATCH, submit, approve, reject, status, /broker/properties, /properties/:id/investors)
+- [x] 7. Property API routes (POST, PATCH, submit, approve, reject, status, /broker/properties, /properties/:id/investors)
 
 **Goal:** Wire all property management endpoints to the property service with correct middleware chains per the role permission table.
 
@@ -219,7 +219,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 8. Marketplace + Property detail API (GET /properties, GET /properties/:id)
+- [x] 8. Marketplace + Property detail API (GET /properties, GET /properties/:id)
 
 **Goal:** Implement the paginated marketplace endpoint with all filters and the property detail endpoint with computed fields.
 
@@ -245,7 +245,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 9. Marketplace UI + Property detail page (public pages)
+- [x] 9. Marketplace UI + Property detail page (public pages)
 
 **Goal:** Build the public-facing Marketplace and Property Detail pages with filters, search, funding progress, and return calculator.
 
@@ -283,7 +283,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 10. Broker multi-step create listing wizard
+- [x] 10. Broker multi-step create listing wizard
 
 **Goal:** Build the five-step property creation wizard that saves a DRAFT on step 1 and PATCHes on subsequent steps.
 
@@ -313,7 +313,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 11. Ledger service — atomic walletBalance, getBalance, transaction history
+- [x] 11. Ledger service — atomic walletBalance, getBalance, transaction history
 
 **Goal:** Implement the single-entry-point ledger service that atomically maintains `walletBalance` on the User document for every money movement.
 
@@ -338,7 +338,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 12. Wallet top-up (Razorpay order/verify + duplicate prevention)
+- [x] 12. Wallet top-up (Razorpay order/verify + duplicate prevention)
 
 **Goal:** Implement Razorpay test-mode wallet top-up with HMAC signature verification and idempotent duplicate payment prevention.
 
@@ -361,7 +361,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 13. GET /wallet + GET /transactions API + Wallet UI page
+- [x] 13. GET /wallet + GET /transactions API + Wallet UI page
 
 **Goal:** Expose wallet balance (from counter field) and transaction history API endpoints, then build the full Wallet UI page.
 
@@ -387,7 +387,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 14. Investment service — invest() with all 7 guards + atomic oversell prevention + idempotency
+- [x] 14. Investment service — invest() with all 7 guards + atomic oversell prevention + idempotency
 
 **Goal:** Implement the investment engine with all guard conditions, atomic `findOneAndUpdate` oversell prevention, and idempotency key deduplication.
 
@@ -414,7 +414,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 15. Auto-FUNDED transition + broker commission credit (within invest() transaction)
+- [x] 15. Auto-FUNDED transition + broker commission credit (within invest() transaction)
 
 **Goal:** Extend the investment service to auto-transition a property to FUNDED and credit broker commission when unitsSold === totalUnits, all within the same MongoDB transaction.
 
@@ -433,7 +433,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 16. Invest Checkout UI (unit selector, live calc, wallet balance check, confirm modal)
+- [x] 16. Invest Checkout UI (unit selector, live calc, wallet balance check, confirm modal)
 
 **Goal:** Build the Invest Checkout page with unit selector, real-time ownership and amount calculation, wallet balance validation, and confirm modal.
 
@@ -455,7 +455,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 17. Payout service — previewPayout() + executePayout() with idempotency + assertion
+- [x] 17. Payout service — previewPayout() + executePayout() with idempotency + assertion
 
 **Goal:** Implement the payout service with pure preview computation and idempotent execute-payout within a MongoDB transaction, including the distributable sum assertion.
 
@@ -480,7 +480,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 18. Admin Record Sale UI + payout preview table + confirm execute
+- [x] 18. Admin Record Sale UI + payout preview table + confirm execute
 
 **Goal:** Build the Admin Record Sale page with sale price input, payout preview table, and the final confirm-and-execute flow.
 
@@ -500,7 +500,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 19. Admin dashboard — GET /admin/stats KPIs + charts + approval queues
+- [x] 19. Admin dashboard — GET /admin/stats KPIs + charts + approval queues
 
 **Goal:** Implement the admin stats API endpoint and build the Admin Dashboard page with KPI cards, charts, and pending approval queue counts.
 
@@ -526,7 +526,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 20. Admin property management UI (all properties table, approve/reject modal, status controls)
+- [x] 20. Admin property management UI (all properties table, approve/reject modal, status controls)
 
 **Goal:** Build the Admin Properties page with full management capabilities including the approve/reject modal and status transition controls.
 
@@ -547,7 +547,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 21. Admin user management + KYC queue + Settings UI
+- [x] 21. Admin user management + KYC queue + Settings UI
 
 **Goal:** Build the Admin Users page, KYC Queue page, and Settings page.
 
@@ -575,7 +575,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 22. Investor dashboard + Portfolio page
+- [x] 22. Investor dashboard + Portfolio page
 
 **Goal:** Implement the portfolio summary API endpoint and build the Investor Dashboard and Portfolio pages with the allocation donut chart and holdings table.
 
@@ -602,7 +602,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 23. Broker dashboard + property analytics
+- [x] 23. Broker dashboard + property analytics
 
 **Goal:** Build the Broker Dashboard with KPI cards and commission earned, and the Property Analytics page with funding timeline and investor table.
 
@@ -625,7 +625,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 24. KYC service + routes + KYC UI page
+- [x] 24. KYC service + routes + KYC UI page
 
 **Goal:** Implement KYC document upload (Cloudinary), admin review API, and the Investor KYC page.
 
@@ -652,7 +652,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 25. Seed script — 8 properties, 5 investors, 2 brokers, 1 admin + reconciliation assertion
+- [x] 25. Seed script — 8 properties, 5 investors, 2 brokers, 1 admin + reconciliation assertion
 
 **Goal:** Create a comprehensive seed script with realistic data covering all property statuses and wallet ledger entries, ending with the R19 AC6 reconciliation assertion.
 
@@ -681,7 +681,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 26. UI polish — loading skeletons, empty states, error states, toasts, responsive pass
+- [x] 26. UI polish — loading skeletons, empty states, error states, toasts, responsive pass
 
 **Goal:** Complete all UI quality requirements: loading states, empty states, error states, success toasts, and responsive layout from 360px.
 
@@ -708,7 +708,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 27. README.md + AGENTS.md + .env.example files + ESLint/Prettier config
+- [x] 27. README.md + AGENTS.md + .env.example files + ESLint/Prettier config
 
 **Goal:** Write complete setup documentation, finalize the AGENTS.md for AI context, and ensure ESLint/Prettier configs pass.
 
@@ -732,7 +732,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 28. ADR.md — Architecture Decision Records
+- [x] 28. ADR.md — Architecture Decision Records
 
 **Goal:** Document the key technical decisions made during design so future developers understand the rationale.
 
@@ -759,7 +759,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 29. Password reset via email (POST /auth/forgot-password, POST /auth/reset-password/:token)
+- [x] 29. Password reset via email (POST /auth/forgot-password, POST /auth/reset-password/:token)
 
 **Goal:** Implement time-limited email-based password reset using Nodemailer or Resend.
 
@@ -783,7 +783,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 30. Withdrawal flow (POST /wallet/withdraw, admin queue, PATCH /admin/withdrawals/:id)
+- [x] 30. Withdrawal flow (POST /wallet/withdraw, admin queue, PATCH /admin/withdrawals/:id)
 
 **Goal:** Implement investor withdrawal requests and the admin approval/rejection queue.
 
@@ -807,7 +807,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 31. Enquiries (POST /enquiries, GET /enquiries, POST /enquiries/:id/reply, Enquiries UI)
+- [x] 31. Enquiries (POST /enquiries, GET /enquiries, POST /enquiries/:id/reply, Enquiries UI)
 
 **Goal:** Implement the property enquiry system with bidirectional investor–broker messaging.
 
@@ -831,7 +831,7 @@ ESTORA is built as a MERN-stack monorepo (`client/` for React 18 + Vite, `server
 
 ---
 
-- [ ] 32. In-app notifications (service, GET /notifications, PATCH /notifications/:id/read, unread badge)
+- [x] 32. In-app notifications (service, GET /notifications, PATCH /notifications/:id/read, unread badge)
 
 **Goal:** Implement the notification service and connect it to all eight trigger events, plus the notification UI with unread badge.
 
@@ -987,3 +987,15 @@ flowchart TD
 }
 ```
 
+
+## Completion and remaining submission items
+
+Tasks 1–32 are implemented, including all four Phase 2 features. This status was checked against the project source and `IMPLEMENTATION.md`; the financial and state properties have 100 generated cases each, and the implementation report records 26 backend and 39 frontend tests. The items below are release and submission work, not unimplemented application features.
+
+### Remaining before submission
+
+- [ ] Deploy the frontend and API and record their live URLs. If hosting is unavailable, prepare and verify the documented local demo as the submission fallback; a live deployment has not been performed.
+- [ ] Record a 3–5 minute narrated demo covering the P0 flows. Include two investors attempting to buy the last available units; automated concurrency tests exist, but this recording has not been made.
+- [ ] Submit the repository, README, environment examples, test credentials, Postman collection, and either deployment URLs or local-run instructions through the instructor’s required channel before the deadline.
+
+The PRD and original brief contain older or optional requests that conflict with the final `docs/requirements.md`. Follow the final requirements as `AGENTS.md` directs. Features explicitly out of scope there—including refresh-token rotation, secondary trading, rental distributions, audit logs, email event notifications, dark mode, broker withdrawals, and admin investing—are not remaining tasks.

@@ -23,6 +23,10 @@ export const signupSchema = z.object({
   role: z.enum(['INVESTOR', 'BROKER']),
 });
 export function AuthPage({ mode = 'login' }) {
+  const { token } = useParams();
+  return <AuthForm key={`${mode}:${token || ''}`} mode={mode} />;
+}
+function AuthForm({ mode }) {
   const navigate = useNavigate(),
     location = useLocation(),
     { token: resetToken } = useParams();
@@ -54,7 +58,12 @@ export function AuthPage({ mode = 'login' }) {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { role: 'INVESTOR' },
+    defaultValues: {
+      role:
+        new URLSearchParams(location.search).get('role') === 'broker'
+          ? 'BROKER'
+          : 'INVESTOR',
+    },
   });
   const action = useAction(
     async (data) => {
@@ -101,13 +110,19 @@ export function AuthPage({ mode = 'login' }) {
           <br />
           Shared possibilities.
         </h2>
-        <img src="/architecture.svg" alt="Architectural illustration" />
+        <img
+          src="/assets/estora-residences.webp"
+          alt="Illustrative contemporary residences"
+        />
+        <small className="auth-image-label">
+          Concept architecture · Illustrative
+        </small>
         <div className="auth-note">
           <ShieldCheck size={22} />
           <p>
-            Clear ownership. Transparent transactions.
+            Choose a property. Own your units.
             <br />
-            Every rupee, accounted for.
+            Track your share through to sale.
           </p>
         </div>
       </aside>
@@ -128,6 +143,9 @@ export function AuthPage({ mode = 'login' }) {
               : isReset
                 ? 'Use at least 8 characters, a number and a symbol.'
                 : 'Log in to see your portfolio and the possibilities ahead.'}
+        </p>
+        <p className="auth-demo-note">
+          Academic demo · Test funds and dummy documents only.
         </p>
         {done ? (
           <Success

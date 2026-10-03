@@ -243,7 +243,11 @@ function MoneyForm({ mode, balance, onClose }) {
 }
 export function Wallet() {
   const wallet = useData('/wallet');
-  const withdrawals = useData('/wallet/withdrawals', { page: 1, limit: 10 });
+  const [withdrawalPage, setWithdrawalPage] = useState(1);
+  const withdrawals = useData('/wallet/withdrawals', {
+    page: withdrawalPage,
+    limit: 10,
+  });
   const [modal, setModal] = useState(null);
   return (
     <>
@@ -278,19 +282,29 @@ export function Wallet() {
         <h2>Withdrawal requests</h2>
         <QueryState query={withdrawals}>
           {(data) => (
-            <Table
-              items={data.items}
-              columns={[
-                { label: 'Requested', render: (w) => date(w.createdAt) },
-                { label: 'Amount', render: (w) => money(w.amount) },
-                { label: 'Status', render: (w) => <Chip status={w.status} /> },
-                {
-                  label: 'Account',
-                  render: (w) =>
-                    `•••• ${w.bankDetails?.accountNumber?.slice(-4) || '—'}`,
-                },
-              ]}
-            />
+            <>
+              <Table
+                items={data.items}
+                columns={[
+                  { label: 'Requested', render: (w) => date(w.createdAt) },
+                  { label: 'Amount', render: (w) => money(w.amount) },
+                  {
+                    label: 'Status',
+                    render: (w) => <Chip status={w.status} />,
+                  },
+                  {
+                    label: 'Account',
+                    render: (w) =>
+                      `•••• ${w.bankDetails?.accountNumber?.slice(-4) || '—'}`,
+                  },
+                ]}
+              />
+              <Pagination
+                data={data}
+                page={withdrawalPage}
+                onChange={setWithdrawalPage}
+              />
+            </>
           )}
         </QueryState>
       </section>

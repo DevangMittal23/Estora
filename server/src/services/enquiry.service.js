@@ -16,7 +16,7 @@ export function list(user, query) {
   return paginate(
     Enquiry,
     {
-      [user.role === 'BROKER' ? 'brokerId' : 'investorId']: user._id,
+      [user.role === 'INVESTOR' ? 'investorId' : 'brokerId']: user._id,
       ...(query.propertyId ? { propertyId: query.propertyId } : {}),
     },
     query,
@@ -33,7 +33,7 @@ export async function reply(id, user, text) {
   ensure(item, 404, 'NOT_FOUND');
   ensure(
     (user.role === 'INVESTOR' && String(item.investorId) === String(user._id)) ||
-      (user.role === 'BROKER' && String(item.brokerId) === String(user._id)),
+      (['BROKER', 'ADMIN'].includes(user.role) && String(item.brokerId) === String(user._id)),
     403,
     'FORBIDDEN'
   );

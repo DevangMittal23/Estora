@@ -245,7 +245,7 @@ export function BrokerAnalytics() {
                 )}
               </QueryState>
             </section>
-            <Heading title="Property enquiries" />
+            <Heading title="Property enquiries" as="h2" />
             <Enquiries propertyId={id} />
             {['DRAFT', 'REJECTED'].includes(p.status) && (
               <Link

@@ -116,12 +116,18 @@ export function QueryState({ query, children, empty }) {
   if (empty) return <Empty />;
   return typeof children === 'function' ? children(query.data) : children;
 }
-export function Heading({ eyebrow, title, description, action }) {
+export function Heading({
+  eyebrow,
+  title,
+  description,
+  action,
+  as: Tag = 'h1',
+}) {
   return (
     <header className="page-heading">
       <div>
         {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-        <h1>{title}</h1>
+        <Tag>{title}</Tag>
         {description && <p>{description}</p>}
       </div>
       {action}
@@ -279,13 +285,25 @@ export function Modal({
     const listener = (e) => {
       if (e.key === 'Escape' && !loading) onClose();
       if (e.key === 'Tab') {
-        const nodes = modal.querySelectorAll('button,input,textarea,a[href]');
+        const nodes = modal.querySelectorAll(
+          'button:not(:disabled),input:not(:disabled):not([type="hidden"]),textarea:not(:disabled),select:not(:disabled),a[href],[tabindex="0"]'
+        );
         const first = nodes[0],
           last = nodes[nodes.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
+        if (!nodes.length) {
+          e.preventDefault();
+          return;
+        }
+        if (
+          e.shiftKey &&
+          (document.activeElement === first || document.activeElement === modal)
+        ) {
           e.preventDefault();
           last?.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
+        } else if (
+          !e.shiftKey &&
+          (document.activeElement === last || document.activeElement === modal)
+        ) {
           e.preventDefault();
           first?.focus();
         }
@@ -347,6 +365,7 @@ export function PropertyImage({
   useEffect(() => {
     let alive = true;
     let blobUrl;
+    setUrl('/architecture.svg');
     if (media?.url?.startsWith('/api/v1/media/')) {
       api
         .get(media.url.replace('/api/v1', ''), { responseType: 'blob' })
@@ -425,7 +444,11 @@ export function MediaLink({ media }) {
   ) : (
     <a
       className="document-link"
-      href={url?.startsWith('/') ? `${apiOrigin}${url}` : url}
+      href={
+        url?.startsWith('/') && !url.startsWith('/assets/')
+          ? `${apiOrigin}${url}`
+          : url
+      }
       target="_blank"
       rel="noreferrer"
     >
@@ -462,6 +485,12 @@ export function PropertyCard({ property: p }) {
           </div>
         </div>
         <Progress value={p.fundingPct ?? (p.unitsSold / p.totalUnits) * 100} />
+        <div className="property-entry">
+          <span>
+            Start from <strong>{money(p.unitPrice * p.minUnits)}</strong>
+          </span>
+          <span>{p.holdingPeriodMonths} month hold</span>
+        </div>
         <Link className="text-link" to={`/properties/${p._id}`}>
           Explore property <ArrowRight size={17} />
         </Link>

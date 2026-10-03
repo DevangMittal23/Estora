@@ -218,6 +218,32 @@ describe('HTTP authorization, validation and account workflows', () => {
         .status
     ).toBe(200);
   });
+  test('property review notifications link to a page the listing owner can access', async () => {
+    for (const role of ['admin', 'broker']) {
+      for (const status of ['LIVE', 'REJECTED']) {
+        const property = await newProperty({ status: 'PENDING_APPROVAL' });
+        await m.Property.updateOne({ _id: property._id }, { brokerId: users[role]._id });
+        const action = status === 'LIVE' ? 'approve' : 'reject';
+        const response = await api('post', `/properties/${property._id}/${action}`, 'admin').send(
+          status === 'REJECTED' ? { reason: 'Update listing documents' } : {}
+        );
+        expect(response.status).toBe(200);
+        const notification = await m.Notification.findOne({
+          userId: users[role]._id,
+          type: status === 'LIVE' ? 'PROPERTY_APPROVED' : 'PROPERTY_REJECTED',
+          body: { $regex: property.title },
+        });
+        const expected =
+          role === 'admin'
+            ? status === 'LIVE'
+              ? `/properties/${property._id}`
+              : `/admin/properties/${property._id}/edit`
+            : `/broker/properties/${property._id}`;
+        expect(notification.link).toBe(expected);
+        expect((await api('get', `/properties/${property._id}`, role)).status).toBe(200);
+      }
+    }
+  });
   test('reset password token expires and can only be used once', async () => {
     const email = 'new@test.dev';
     const log = jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -428,6 +454,38 @@ describe('HTTP investment, payments, KYC, withdrawals and enquiries', () => {
     expect((await api('patch', `/notifications/${notification._id}/read`)).status).toBe(200);
     const tx = json(await api('get', `/transactions?userId=${users.broker._id}`));
     expect(tx.items.every((t) => String(t.userId) === String(users.investor._id))).toBe(true);
+  });
+});
+describe('Admin-owned listing enquiries', () => {
+  test('an admin owner can answer their enquiries but cannot access unrelated broker threads', async () => {
+    const owned = await newProperty();
+    await m.Property.updateOne({ _id: owned._id }, { brokerId: users.admin._id });
+    const other = await newProperty();
+    const create = async (property) =>
+      json(
+        await api('post', '/enquiries').send({
+          propertyId: String(property._id),
+          message: 'Can the listing owner explain the holding period?',
+        })
+      ).enquiry;
+    const ownThread = await create(owned);
+    const otherThread = await create(other);
+    const ownList = await api('get', `/enquiries?propertyId=${owned._id}`, 'admin');
+    expect(ownList.status).toBe(200);
+    expect(json(ownList).items.map((thread) => thread._id)).toEqual([ownThread._id]);
+    expect(json(await api('get', `/enquiries?propertyId=${other._id}`, 'admin')).total).toBe(0);
+    expect(
+      (await api('post', `/enquiries/${ownThread._id}/reply`, 'admin').send({ text: '24 months.' }))
+        .status
+    ).toBe(200);
+    expect(
+      (await api('post', `/enquiries/${otherThread._id}/reply`, 'admin').send({ text: 'Unrelated' }))
+        .status
+    ).toBe(403);
+    expect(
+      (await api('post', `/enquiries/${ownThread._id}/reply`, 'broker').send({ text: 'Unrelated' }))
+        .status
+    ).toBe(403);
   });
 });
 describe('Financial properties against a real MongoDB replica set (100 runs each)', () => {

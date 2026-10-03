@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { RouteScroll } from './components/RouteScroll';
 import { AuthProvider } from './context/AuthContext';
 import { PublicLayout, DashboardLayout } from './layouts/Layouts';
 import { ProtectedRoute, RoleRoute, BrokerGuard } from './routes/Guards';
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <RouteScroll />
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Landing />} />
@@ -106,6 +108,7 @@ export default function App() {
                 />
                 <Route path="/admin/properties/:id/sell" element={<Sale />} />
                 <Route path="/admin/users" element={<Users />} />
+                <Route path="/admin/enquiries" element={<Enquiries />} />
                 <Route path="/admin/kyc" element={<KYCQueue />} />
                 <Route path="/admin/withdrawals" element={<Withdrawals />} />
                 <Route path="/admin/settings" element={<Settings />} />

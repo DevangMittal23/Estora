@@ -27,7 +27,13 @@ The six supplied documents were reviewed. The final `docs/requirements.md` defin
 
 Client tests verify guards, validation, query states, unit/cap/terms gating, failed investment retry key reuse and stale sale-price preview blocking. The browser evaluation checks representative public/investor/broker/admin pages across desktop/tablet/mobile. This is focused verification, not a claim that every example test in the original task document exists verbatim.
 
-The final suites have 26 backend and 39 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery asset routing and authenticated media retrieval. The live browser smoke check completed a labelled mock top-up and an investment, then verified updated holdings; `artifacts/investment-smoke.jpg` records the result. The disposable demo was restarted afterward to restore its seed data. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+The current suites have 28 backend and 46 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links and participant-scoped admin-owned listing enquiries. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+
+The commercial frontend refresh uses a navy/ivory/emerald palette, architectural concept imagery, a literal fractional ownership example and clear funding-to-sale explanations. Shared public, authentication and workspace layouts improve mobile navigation, forms, tables and empty states. Generated architecture is labelled illustrative; financial projections remain estimates and the demo status is explicit.
+
+The latest isolated browser smoke check completed a labelled mock top-up and a one-unit investment, then verified the wallet credit, purchase confirmation and updated portfolio ownership. Public, investor, broker and admin pages were checked, including listing analytics, creation, review queues, sale entry, settings and shared account pages. Mobile navigation and anchor-to-route scrolling were exercised; representative layouts had no page-wide horizontal overflow at 360, 375 and 768 pixels. Desktop/mobile screenshots are stored in `artifacts/commercial-*.png`.
+
+A separate runtime audit passed 63 API checks against the disposable demo: public and role-specific endpoints, permission boundaries, malformed/missing IDs, invalid queries, unknown endpoints and CORS. These checks used a disposable replica-set database on port 5001 with the frontend on 5174; the configured Atlas data was not mutated. Lint and frontend production build also pass. This is bounded regression and smoke verification rather than a claim that every possible workflow has been exhausted.
 
 Production dependency audit: the server reports zero advisories. The client reports two moderate entries for the required React Router v6 packages: an open-redirect advisory and an SSR hydration advisory. This client does not use SSR hydration, and notification links reject external paths and backslashes. No patched v6 release was offered by the audit; a future major router upgrade should be reviewed separately.
 
@@ -44,6 +50,7 @@ Secondary pages now include shared Back navigation following the user's subseque
 - Zero-valued payouts/fees produce no money movement, while the payout record still accounts for their exact zero shares.
 - Seeding refuses to erase an existing configured database unless `ALLOW_SEED_RESET=true` is explicitly set. Disposable tests/demos pass an explicit reset argument.
 - Local gallery illustrations are served by the frontend; uploaded media is served by the API. Vite injects the environment-configured API URL, with a local demo default in configuration only.
+- Admin-owned listing enquiries use the owner's participant scope. Admins can respond to their own listings without gaining access to unrelated broker threads; review notifications choose a route accessible to the listing owner's role.
 
 ## External configuration
 

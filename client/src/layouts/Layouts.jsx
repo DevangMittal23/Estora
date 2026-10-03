@@ -1,5 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import {
   Building2,
   LayoutDashboard,
@@ -40,6 +46,7 @@ const navigation = {
     ['Overview', '/admin', LayoutDashboard],
     ['Properties', '/admin/properties', Building2],
     ['User management', '/admin/users', Users],
+    ['Listing enquiries', '/admin/enquiries', MessageSquare],
     ['KYC review', '/admin/kyc', ShieldCheck],
     ['Withdrawals', '/admin/withdrawals', Wallet],
     ['Platform settings', '/admin/settings', Settings],
@@ -56,24 +63,82 @@ export function Logo() {
 }
 export function Footer() {
   return (
-    <footer>
-      <Logo />
-      <p>
-        This is an academic project. No real money or securities are involved.
-      </p>
-      <span>One property. Many owners.</span>
+    <footer className="public-footer">
+      <div className="footer-main">
+        <div className="footer-brand">
+          <Logo />
+          <p>
+            Real estate ownership,
+            <br />
+            one considered share at a time.
+          </p>
+        </div>
+        <div>
+          <h2>Explore ESTORA</h2>
+          <Link to="/properties">Property marketplace</Link>
+          <a href="/#how-it-works">How fractional ownership works</a>
+          <a href="/#faq">Questions & answers</a>
+        </div>
+        <div>
+          <h2>Your next step</h2>
+          <Link to="/signup">Become an investor</Link>
+          <Link to="/signup?role=broker">Join as a broker</Link>
+          <Link to="/login">Log in to your account</Link>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <p>
+          This is an academic project. No real money or securities are involved.
+          Use dummy identity documents only.
+        </p>
+        <span>ESTORA · Fractional real estate</span>
+      </div>
     </footer>
   );
 }
 export function PublicLayout() {
   const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const menuButton = useRef(null);
+  useEffect(
+    () => setOpen(false),
+    [location.pathname, location.search, location.hash]
+  );
+  useEffect(() => {
+    if (!open) return;
+    const close = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', close);
+    return () => document.removeEventListener('keydown', close);
+  }, [open]);
   return (
     <>
-      <nav className="public-nav">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+      <nav className="public-nav" aria-label="Main navigation">
         <Logo />
-        <div className="public-nav-links">
+        <div
+          id="public-navigation"
+          className={`public-nav-links ${open ? 'is-open' : ''}`}
+        >
           <NavLink to="/properties">Discover properties</NavLink>
-          <a href="/#how-it-works">How it works</a>
+          <a href="/#how-it-works" onClick={() => setOpen(false)}>
+            How it works
+          </a>
+          <a href="/#faq" onClick={() => setOpen(false)}>
+            Why ESTORA
+          </a>
+          {!user && (
+            <Link className="mobile-login" to="/login">
+              Log in
+            </Link>
+          )}
         </div>
         <div className="actions">
           {user ? (
@@ -90,9 +155,19 @@ export function PublicLayout() {
               </Link>
             </>
           )}
+          <button
+            ref={menuButton}
+            className="icon-button public-menu-button"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            aria-controls="public-navigation"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </nav>
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <PageBack publicPage />
         <Outlet />
       </main>
@@ -103,6 +178,8 @@ export function PublicLayout() {
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const sidebarRef = useRef(null);
+  const menuRef = useRef(null);
   const [mobile, setMobile] = useState(
     () => window.matchMedia('(max-width: 768px)').matches
   );
@@ -112,6 +189,37 @@ export function DashboardLayout() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+  useEffect(() => {
+    if (!open || !mobile) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    sidebarRef.current?.querySelector('button')?.focus();
+    const listener = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        menuRef.current?.focus();
+      }
+      if (event.key === 'Tab') {
+        const nodes = sidebarRef.current?.querySelectorAll(
+          'a[href],button:not(:disabled)'
+        );
+        const first = nodes?.[0],
+          last = nodes?.[nodes.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', listener);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', listener);
+    };
+  }, [open, mobile]);
   const navigate = useNavigate();
   const notifications = useData(
     '/notifications',
@@ -125,6 +233,8 @@ export function DashboardLayout() {
         <div className="sidebar-backdrop" onClick={() => setOpen(false)} />
       )}
       <aside
+        ref={sidebarRef}
+        id="workspace-navigation"
         className={`sidebar ${open ? 'is-open' : ''}`}
         inert={mobile && !open ? '' : undefined}
         aria-hidden={mobile && !open ? true : undefined}
@@ -140,7 +250,7 @@ export function DashboardLayout() {
           </button>
         </div>
         <span className="sidebar-caption">{label(user.role)} workspace</span>
-        <nav>
+        <nav aria-label={`${label(user.role)} navigation`}>
           {navigation[user.role].map(([text, to, Icon]) => (
             <NavLink key={to} to={to} end onClick={() => setOpen(false)}>
               <Icon size={19} />
@@ -183,12 +293,16 @@ export function DashboardLayout() {
           <button
             className="icon-button mobile-only"
             aria-label="Open navigation"
+            ref={menuRef}
+            aria-expanded={open}
+            aria-controls="workspace-navigation"
             onClick={() => setOpen(true)}
           >
             <Menu />
           </button>
           <span className="topbar-title">
-            Your real estate, in perspective.
+            <strong>{label(user.role)} workspace</strong>
+            <span> / </span> {user.name}
           </span>
           <div className="actions">
             {user.role === 'INVESTOR' && (

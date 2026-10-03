@@ -17,7 +17,15 @@ import {
 import { date, idOf, homeFor } from '../../utils';
 import { passwordSchema } from '../public/Auth';
 export function Enquiries({ propertyId }) {
-  const query = useData('/enquiries');
+  return <EnquiryList key={propertyId || 'all'} propertyId={propertyId} />;
+}
+function EnquiryList({ propertyId }) {
+  const [page, setPage] = useState(1);
+  const query = useData('/enquiries', {
+    page,
+    limit: 10,
+    ...(propertyId ? { propertyId } : {}),
+  });
   return (
     <>
       {!propertyId && (
@@ -29,27 +37,30 @@ export function Enquiries({ propertyId }) {
       )}
       <QueryState query={query}>
         {(data) => {
-          const items = data.items.filter(
-            (e) => !propertyId || idOf(e.propertyId) === propertyId
-          );
-          return items.length ? (
-            <div className="threads">
-              {items.map((enquiry) => (
-                <EnquiryThread key={enquiry._id} enquiry={enquiry} />
-              ))}
-            </div>
-          ) : (
-            <Empty
-              title="No enquiries yet"
-              description="Questions about properties and broker replies will appear here."
-              action={
-                !propertyId && (
-                  <Link className="button primary" to="/properties">
-                    Explore properties
-                  </Link>
-                )
-              }
-            />
+          const items = data.items;
+          return (
+            <>
+              {items.length ? (
+                <div className="threads">
+                  {items.map((enquiry) => (
+                    <EnquiryThread key={enquiry._id} enquiry={enquiry} />
+                  ))}
+                </div>
+              ) : (
+                <Empty
+                  title="No enquiries yet"
+                  description="Questions about properties and broker replies will appear here."
+                  action={
+                    !propertyId && (
+                      <Link className="button primary" to="/properties">
+                        Explore properties
+                      </Link>
+                    )
+                  }
+                />
+              )}
+              <Pagination data={data} page={page} onChange={setPage} />
+            </>
           );
         }}
       </QueryState>

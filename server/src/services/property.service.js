@@ -129,6 +129,13 @@ export async function review(id, adminId, status, reason) {
       property.rejectionReason = undefined;
     } else property.rejectionReason = reason;
     await property.save({ session });
+    const owner = await User.findById(property.brokerId).select('role').session(session);
+    const link =
+      owner?.role === 'ADMIN'
+        ? status === 'LIVE'
+          ? `/properties/${id}`
+          : `/admin/properties/${id}/edit`
+        : `/broker/properties/${id}`;
     await notifications.create({
       userId: property.brokerId,
       type: status === 'LIVE' ? 'PROPERTY_APPROVED' : 'PROPERTY_REJECTED',
@@ -137,7 +144,7 @@ export async function review(id, adminId, status, reason) {
         status === 'LIVE'
           ? `${property.title} is approved for investment.`
           : `${property.title}: ${reason}`,
-      link: `/broker/properties/${id}`,
+      link,
       session,
     });
     return property;

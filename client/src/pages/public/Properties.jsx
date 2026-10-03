@@ -6,6 +6,8 @@ import {
   MapPin,
   Search,
   ShieldCheck,
+  Layers3,
+  Landmark,
 } from 'lucide-react';
 import { useData, send, useAction } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -38,23 +40,21 @@ export function Landing() {
     <>
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">
-            A new perspective on property ownership
-          </span>
+          <span className="eyebrow">Real estate. A share at a time.</span>
           <h1>
-            One property.
+            Own a share.
             <br />
-            Many owners.
+            <em>See the bigger</em>
             <br />
-            <em>Your possibility.</em>
+            <em>picture.</em>
           </h1>
           <p>
-            Own a share of exceptional real estate. Build a portfolio at your
-            pace, with clear ownership and every transaction in view.
+            Buy units in reviewed properties, track your proportional ownership,
+            and receive your share of net proceeds when the property sells.
           </p>
           <div className="actions">
             <Link to="/properties" className="button primary">
-              Discover properties
+              Explore properties
               <ArrowUpRight size={17} />
             </Link>
             <a href="#how-it-works" className="text-link">
@@ -65,20 +65,30 @@ export function Landing() {
           <div className="hero-trust">
             <ShieldCheck size={18} />
             <span>
-              Verified listings · Transparent ownership · Complete ledger
+              Reviewed listings. Clear ownership. A record of every transaction.
             </span>
           </div>
+          <p className="hero-demo">
+            An academic demonstration. Explore with test funds only.
+          </p>
         </div>
         <div className="hero-art">
           <img
-            src="/architecture.svg"
-            alt="Architectural illustration of a modern investment property"
+            src="/assets/estora-residences.webp"
+            alt="Illustrative contemporary residences with limestone balconies and landscaped gardens"
+            fetchpriority="high"
           />
           <div className="hero-art-caption">
-            <span>REAL ESTATE, REIMAGINED</span>
-            <strong>A place in your future.</strong>
+            <span>THE OWNERSHIP IDEA</span>
+            <strong>One property. Many owners.</strong>
+            <p>
+              10 of 1,000 units = <b>1% ownership</b>
+            </p>
+            <small>Illustrative example · Concept architecture</small>
           </div>
-          <span className="hero-vertical">ESTORA / FRACTIONAL OWNERSHIP</span>
+          <span className="hero-vertical">
+            A DIFFERENT WAY INTO REAL ESTATE
+          </span>
         </div>
       </section>
       <section className="landing-stats">
@@ -87,15 +97,15 @@ export function Landing() {
             <>
               <div>
                 <strong>{compactMoney(s.totalRaised)}</strong>
-                <span>Total funding raised</span>
+                <span>Demo funds committed</span>
               </div>
               <div>
                 <strong>{s.investors?.toLocaleString('en-IN')}</strong>
-                <span>Investors on the platform</span>
+                <span>Investor accounts</span>
               </div>
               <div>
                 <strong>{s.totalProperties}</strong>
-                <span>Properties sourced</span>
+                <span>Properties on the platform</span>
               </div>
               <div>
                 <strong>Every rupee</strong>
@@ -105,11 +115,12 @@ export function Landing() {
           )}
         </QueryState>
       </section>
-      <section className="public-section">
+      <section className="public-section featured-section">
         <Heading
-          eyebrow="Considered opportunities"
-          title="Find your next investment."
-          description="Explore properties sourced by approved brokers and reviewed by the platform."
+          as="h2"
+          eyebrow="Open for investment"
+          title="Consider the property. Choose your share."
+          description="Compare unit prices, holding periods and funding progress. Every live listing has been reviewed by the platform."
           action={
             <Link className="text-link" to="/properties">
               View marketplace
@@ -134,13 +145,66 @@ export function Landing() {
           }
         </QueryState>
       </section>
+      <section className="ownership-section" aria-labelledby="ownership-title">
+        <div className="ownership-intro">
+          <span className="eyebrow">
+            A smaller entry. The same clear picture.
+          </span>
+          <h2 id="ownership-title">
+            You don’t need to buy
+            <br />
+            the whole property.
+          </h2>
+          <p>
+            A property is divided into a fixed number of units. The units you
+            buy determine your percentage of ownership and your share of the net
+            sale proceeds.
+          </p>
+          <a href="#how-it-works" className="text-link">
+            Understand the journey <ArrowRight size={17} />
+          </a>
+        </div>
+        <div className="ownership-example">
+          <span className="example-label">AN ILLUSTRATIVE EXAMPLE</span>
+          <div className="ownership-math">
+            <div>
+              <small>Property value</small>
+              <strong>₹1 crore</strong>
+            </div>
+            <span>÷</span>
+            <div>
+              <small>Total units</small>
+              <strong>1,000</strong>
+            </div>
+            <span>=</span>
+            <div>
+              <small>Price per unit</small>
+              <strong>₹10,000</strong>
+            </div>
+          </div>
+          <div className="ownership-outcome">
+            <Layers3 size={26} />
+            <div>
+              <strong>10 units. ₹1 lakh. 1% ownership.</strong>
+              <p>
+                If the property sells, you receive 1% of the net proceeds after
+                the platform fee.
+              </p>
+            </div>
+          </div>
+          <small>
+            Example only. Actual prices, minimum units and fees depend on the
+            property and platform settings.
+          </small>
+        </div>
+      </section>
       <section id="how-it-works" className="how-section">
         <div>
-          <span className="eyebrow">From discovery to distribution</span>
+          <span className="eyebrow">How ESTORA works</span>
           <h2>
-            A clear path.
+            From your first unit
             <br />
-            Every step of the way.
+            to the final sale.
           </h2>
           <p>
             Know what you own, where your funds go, and how your share is
@@ -150,20 +214,20 @@ export function Landing() {
         <ol>
           {[
             [
-              'Discover',
-              'Explore reviewed properties and consider the financials.',
+              'Explore & understand',
+              'Compare properties, read supporting documents and consider the expected holding period.',
             ],
             [
               'Verify & fund',
-              'Submit dummy KYC documents and add funds to your wallet.',
+              'Complete identity verification with dummy documents, then add test funds to your wallet.',
             ],
             [
               'Own your share',
-              'Choose your units and see your precise ownership percentage.',
+              'Buy units while funding is open. Track your ownership and property milestones in your portfolio.',
             ],
             [
-              'Track & receive',
-              'Follow the lifecycle and receive your share when the property sells.',
+              'Receive your share at sale',
+              'When the property is sold, net proceeds are allocated by ownership and credited to your wallet.',
             ],
           ].map(([title, description], i) => (
             <li key={title}>
@@ -176,7 +240,35 @@ export function Landing() {
           ))}
         </ol>
       </section>
-      <section className="public-section faq-section">
+      <section className="transparency-section public-section">
+        <div>
+          <Landmark size={28} />
+          <span className="eyebrow">An informed decision starts here</span>
+          <h2>Clarity before commitment.</h2>
+        </div>
+        <div>
+          <h3>Know the timeline</h3>
+          <p>
+            Plan for the stated holding period. There is no marketplace to
+            resell your units before the property sells.
+          </p>
+        </div>
+        <div>
+          <h3>Understand the estimate</h3>
+          <p>
+            Appreciation is a projection, not a promise. Property values can
+            fall. Returns depend on the final sale price and fees.
+          </p>
+        </div>
+        <div>
+          <h3>Follow every movement</h3>
+          <p>
+            See your purchases, refunds and sale payouts in your wallet history.
+            Rental income distributions are not part of this platform.
+          </p>
+        </div>
+      </section>
+      <section id="faq" className="public-section faq-section">
         <div>
           <span className="eyebrow">Good questions. Clear answers.</span>
           <h2>Before you invest.</h2>
@@ -211,6 +303,23 @@ export function Landing() {
           ))}
         </div>
       </section>
+      <section className="broker-invitation">
+        <div>
+          <span className="eyebrow">For property brokers</span>
+          <h2>
+            Bring the right properties
+            <br />
+            to a wider circle.
+          </h2>
+          <p>
+            Create listings, manage enquiries and follow funding from one
+            workspace. Broker accounts require platform approval.
+          </p>
+        </div>
+        <Link className="button secondary" to="/signup?role=broker">
+          Join as a broker <ArrowUpRight size={18} />
+        </Link>
+      </section>
     </>
   );
 }
@@ -229,8 +338,8 @@ export function Marketplace() {
     <section className="public-section marketplace">
       <Heading
         eyebrow="The marketplace"
-        title="A share in something exceptional."
-        description="Discover opportunities that fit your ambitions. Review the details, then make your move."
+        title="Find a property. Make it part of your portfolio."
+        description="Explore fractional ownership opportunities. Compare the cost of entry, review the documents and choose the units that fit your plans."
       />
       <div className="market-layout">
         <aside className="filters">
@@ -366,6 +475,18 @@ export function Marketplace() {
           <QueryState query={query}>
             {(data) => (
               <>
+                <p className="market-results" aria-live="polite">
+                  <strong>
+                    {data.total ?? data.items.length}{' '}
+                    {(data.total ?? data.items.length) === 1
+                      ? 'property'
+                      : 'properties'}
+                  </strong>{' '}
+                  matching your search{' '}
+                  <span>
+                    Estimates are illustrative. Returns are not guaranteed.
+                  </span>
+                </p>
                 {data.items.length ? (
                   <div
                     className={`property-grid ${view === 'list' ? 'list-view' : ''}`}
@@ -508,7 +629,7 @@ export function PropertyDetail() {
                       </strong>
                     </div>
                     <div>
-                      <small>Rental yield</small>
+                      <small>Indicative rental yield</small>
                       <strong>{p.rentalYieldPct}%</strong>
                     </div>
                     <div>
@@ -516,6 +637,10 @@ export function PropertyDetail() {
                       <strong>{p.holdingPeriodMonths} months</strong>
                     </div>
                   </div>
+                  <p className="small">
+                    Rental yield is supplied as property context. ESTORA does
+                    not distribute rental income.
+                  </p>
                 </section>
                 <ReturnCalculator property={p} />
                 <section className="panel">
@@ -547,6 +672,14 @@ export function PropertyDetail() {
                     referrerPolicy="no-referrer"
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(p.geo?.lat && p.geo?.lng ? `${p.geo.lat},${p.geo.lng}` : `${p.address}, ${p.city}`)}&output=embed`}
                   />
+                  <a
+                    className="text-link map-link"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address}, ${p.city}, ${p.state}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open location in maps <ArrowUpRight size={17} />
+                  </a>
                 </section>
                 {user?.role === 'INVESTOR' && (
                   <section className="panel">

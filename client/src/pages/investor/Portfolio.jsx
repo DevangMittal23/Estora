@@ -138,6 +138,7 @@ export function InvestorDashboard() {
       <Heading
         eyebrow="Discover more"
         title="Your next possibility."
+        as="h2"
         description="Explore currently live investment opportunities."
       />
       <QueryState query={properties}>

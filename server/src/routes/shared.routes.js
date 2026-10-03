@@ -21,7 +21,7 @@ router.post(
   upload.array('documents', 2),
   c.submitKyc
 );
-router.get('/enquiries', authenticate, requireRole('INVESTOR', 'BROKER'), c.listEnquiries);
+router.get('/enquiries', authenticate, requireRole('INVESTOR', 'BROKER', 'ADMIN'), c.listEnquiries);
 router.post(
   '/enquiries',
   authenticate,
@@ -32,7 +32,7 @@ router.post(
 router.post(
   '/enquiries/:id/reply',
   authenticate,
-  requireRole('INVESTOR', 'BROKER'),
+  requireRole('INVESTOR', 'BROKER', 'ADMIN'),
   validate(replySchema),
   c.replyEnquiry
 );

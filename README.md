@@ -82,12 +82,15 @@ Razorpay, Cloudinary and Resend credentials are not bundled. Their live external
 - [Implementation coverage](IMPLEMENTATION.md)
 - [Architecture decisions](ADR.md)
 - [Demo walkthrough](DEMO.md)
+- [Demo walkthrough for a presentation](docs/DEMO_WALKTHROUGH.md)
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [Validation evidence](docs/VALIDATION_EVIDENCE.md)
 - [Postman collection](api/ESTORA.postman_collection.json)
 - [Prompt log](PROMPTS.md)
 
 ## Deployment
 
-Deployment has not been performed. Included `render.yaml` defines the backend and frontend services; `client/vercel.json` and `client/netlify.toml` configure SPA fallback for alternative frontend hosting. Use Atlas, set all server environment variables in your hosting provider, and set `VITE_API_URL` to the backend origin before building the frontend. Set `CLIENT_URL` to the deployed frontend origin. Do not enable mock payments in production or publish demo passwords.
+Use Render for the Express API and Vercel for the Vite SPA. Included `render.yaml` defines a Render Blueprint for the API, while `client/vercel.json` configures SPA fallback on Vercel. The required setup, environment-variable checklist, failed-startup recovery and post-deploy checks are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Do not enable mock payments in production or publish demo passwords.
 
 Run `npm --prefix client run build` to produce `client/dist`. The backend startup command is `npm --prefix server start`. `/ready` returns 200 when the database is connected. Credentials and public deployment destinations must be supplied separately.
 
