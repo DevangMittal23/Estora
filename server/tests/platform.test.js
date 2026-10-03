@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { mkdir } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import fc from 'fast-check';
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = crypto.randomBytes(48).toString('hex');
@@ -98,6 +99,84 @@ beforeAll(async () => {
 afterAll(async () => {
   await mongoose.disconnect();
   if (repl) await repl.stop();
+});
+describe('Deployed admin provisioning', () => {
+  const credentials = {
+    name: 'Deployment admin',
+    email: 'deployment-admin@test.dev',
+    phone: '9876543210',
+    password: 'PrivateSetup@456',
+  };
+  test('CLI creates a login-capable admin and preserves existing database records', async () => {
+    const originalUsers = await m.User.countDocuments();
+    const originalTransactions = await m.Transaction.countDocuments();
+    const originalProperties = await m.Property.countDocuments();
+    const output = execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL('../scripts/create-admin.js', import.meta.url))],
+      {
+        env: {
+          ...process.env,
+          ADMIN_EMAIL: credentials.email,
+          ADMIN_PASSWORD: credentials.password,
+          ADMIN_NAME: credentials.name,
+          ADMIN_PHONE: credentials.phone,
+        },
+        encoding: 'utf8',
+        timeout: 30000,
+      }
+    );
+    expect(output).toContain(`Admin created: ${credentials.email}`);
+    expect(output).not.toContain(credentials.password);
+    expect(await m.User.countDocuments()).toBe(originalUsers + 1);
+    expect(await m.Transaction.countDocuments()).toBe(originalTransactions);
+    expect(await m.Property.countDocuments()).toBe(originalProperties);
+    const response = await request(app).post('/api/v1/auth/login').send({
+      email: credentials.email,
+      password: credentials.password,
+    });
+    expect(response.status).toBe(200);
+    expect(json(response).user.role).toBe('ADMIN');
+    expect(json(response).user.walletBalance).toBe(0);
+    expect(json(response).user.passwordHash).toBeUndefined();
+  });
+  test('repeat setup never overwrites the password or reactivates an admin', async () => {
+    const { provisionAdmin } = await import('../src/services/admin-bootstrap.service.js');
+    const before = await m.User.findOne({ email: credentials.email }).select('+passwordHash');
+    expect(
+      await provisionAdmin({ ...credentials, email: credentials.email.toUpperCase() })
+    ).toEqual({ created: false, email: credentials.email });
+    await expect(
+      provisionAdmin({ ...credentials, password: 'Different@123' })
+    ).rejects.toMatchObject({ code: 'ADMIN_ALREADY_EXISTS' });
+    await m.User.findByIdAndUpdate(before._id, { isActive: false });
+    await expect(provisionAdmin(credentials)).rejects.toMatchObject({
+      code: 'ACCOUNT_DEACTIVATED',
+    });
+    const after = await m.User.findById(before._id).select('+passwordHash');
+    expect(after.passwordHash).toBe(before.passwordHash);
+    expect(after.isActive).toBe(false);
+  });
+  test('setup refuses to promote an existing investor account', async () => {
+    const { provisionAdmin } = await import('../src/services/admin-bootstrap.service.js');
+    const before = await m.User.findById(users.investor._id).select('+passwordHash').lean();
+    await expect(provisionAdmin({ ...credentials, email: before.email })).rejects.toMatchObject({
+      code: 'EMAIL_TAKEN',
+    });
+    const after = await m.User.findById(before._id).select('+passwordHash').lean();
+    expect(after).toEqual(before);
+  });
+  test('setup enforces password policy and concurrent retries create only one admin', async () => {
+    const { provisionAdmin } = await import('../src/services/admin-bootstrap.service.js');
+    const data = { ...credentials, email: 'concurrent-admin@test.dev' };
+    await expect(provisionAdmin({ ...data, password: 'weak' })).rejects.toMatchObject({
+      name: 'ZodError',
+    });
+    expect(await m.User.exists({ email: data.email })).toBeNull();
+    const results = await Promise.all([provisionAdmin(data), provisionAdmin(data)]);
+    expect(results.filter((result) => result.created)).toHaveLength(1);
+    expect(await m.User.countDocuments({ email: data.email })).toBe(1);
+  });
 });
 describe('HTTP authorization, validation and account workflows', () => {
   test('health, readiness, registration and login', async () => {
@@ -479,8 +558,11 @@ describe('Admin-owned listing enquiries', () => {
         .status
     ).toBe(200);
     expect(
-      (await api('post', `/enquiries/${otherThread._id}/reply`, 'admin').send({ text: 'Unrelated' }))
-        .status
+      (
+        await api('post', `/enquiries/${otherThread._id}/reply`, 'admin').send({
+          text: 'Unrelated',
+        })
+      ).status
     ).toBe(403);
     expect(
       (await api('post', `/enquiries/${ownThread._id}/reply`, 'broker').send({ text: 'Unrelated' }))

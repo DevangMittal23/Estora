@@ -107,7 +107,57 @@ CLIENT_URL=https://estora.vercel.app
 
 Choose **Save and deploy** again. The API allows only this exact browser origin, so no trailing path is permitted.
 
-## 5. Post-deploy validation
+## 5. Create your deployed admin account
+
+Deployment does not create the demo admin. Create a separate admin with a password you
+choose using `npm run admin:create`. This command creates one admin with a zero wallet,
+without demo data or a database reset. It accepts the same name, email, phone and
+password validation as registration, while being available only as a CLI.
+
+### Render setup, including Free instances
+
+1. Wait until Render has deployed the commit containing the `admin:create` command.
+2. In the API service's **Environment**, add:
+
+   ```dotenv
+   ADMIN_EMAIL=<your admin email, not an existing investor or broker email>
+   ADMIN_PASSWORD=<your own password, 8-128 characters including a digit and symbol>
+   ADMIN_NAME=<your name>
+   ADMIN_PHONE=<your phone number>
+   ```
+
+3. Temporarily change **Settings → Start Command** to:
+
+   ```sh
+   npm run admin:create && npm start
+   ```
+
+4. Save and deploy. Logs must show `Admin created: <your email>` and then normal API
+   startup. An existing active admin with matching credentials is left unchanged.
+   A conflicting email, different existing password or deactivated account stops setup
+   without modifying the existing account; choose an unused email or use password recovery.
+5. Log in on Vercel with **your chosen `ADMIN_EMAIL` and `ADMIN_PASSWORD`**.
+6. Restore **Start Command** to `npm start`, remove all four `ADMIN_*` environment
+   variables, and save and deploy again. Removing them does not remove the admin account.
+
+This temporary start command works without Render Shell, which is unavailable for
+[Free web services](https://render.com/docs/ssh).
+
+### Local terminal alternative
+
+Set `server/.env` to use **exactly the same Atlas URI and database name as Render**,
+then add the four `ADMIN_*` values above to that ignored local file. From the repository
+root run:
+
+```powershell
+npm --prefix server run admin:create
+```
+
+Atlas must allow your local machine's network address. Once creation succeeds, remove
+the four temporary values. The password is bcrypt-hashed and is never printed by the
+command. No public admin registration endpoint is added.
+
+## 6. Post-deploy validation
 
 1. Load the Vercel URL, `/login`, `/properties` and a property detail route directly in a new browser tab.
 2. Confirm the API health endpoint returns HTTP 200.

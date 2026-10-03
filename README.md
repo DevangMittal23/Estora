@@ -51,6 +51,13 @@ Verify configured Atlas and Cloudinary credentials with `npm --prefix server run
 
 `NODE_ENV=production` refuses mock payment and local database media modes. Supply Razorpay test and Cloudinary credentials for that configuration. Real money and real KYC are outside this project's scope.
 
+For a deployed database, create your own admin with `npm --prefix server run admin:create`.
+Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` and `ADMIN_PHONE` first, using the same
+`MONGO_URI` as Render. This creates only the admin account and preserves existing data.
+It refuses to promote another account or overwrite an existing admin password. The
+demo credentials above are not created automatically during deployment. See the
+[admin setup instructions](docs/DEPLOYMENT.md#5-create-your-deployed-admin-account).
+
 ## Features
 
 - Landing, searchable marketplace, filtering/sorting/pagination, galleries, maps, documents and return calculator.

@@ -8,6 +8,7 @@
     "start": "node server.js",
     "demo": "node scripts/demo.js",
     "seed": "node scripts/seed.js",
+    "admin:create": "node scripts/create-admin.js",
     "verify:integrations": "node scripts/verify-integrations.js",
     "pretest": "node scripts/prepare-test-db.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",

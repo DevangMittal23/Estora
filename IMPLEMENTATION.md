@@ -27,7 +27,7 @@ The six supplied documents were reviewed. The final `docs/requirements.md` defin
 
 Client tests verify guards, validation, query states, unit/cap/terms gating, failed investment retry key reuse and stale sale-price preview blocking. The browser evaluation checks representative public/investor/broker/admin pages across desktop/tablet/mobile. This is focused verification, not a claim that every example test in the original task document exists verbatim.
 
-The current suites have 28 backend and 46 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links and participant-scoped admin-owned listing enquiries. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+The current suites have 32 backend and 47 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
 
 The commercial frontend refresh uses a navy/ivory/emerald palette, architectural concept imagery, a literal fractional ownership example and clear funding-to-sale explanations. Shared public, authentication and workspace layouts improve mobile navigation, forms, tables and empty states. Generated architecture is labelled illustrative; financial projections remain estimates and the demo status is explicit.
 
@@ -53,5 +53,13 @@ Secondary pages now include shared Back navigation following the user's subseque
 - Admin-owned listing enquiries use the owner's participant scope. Admins can respond to their own listings without gaining access to unrelated broker threads; review notifications choose a route accessible to the listing owner's role.
 
 ## External configuration
+
+Deployed administrators can be provisioned using `npm --prefix server run admin:create`
+and one-time `ADMIN_*` environment variables. The CLI validates registration fields,
+hashes the chosen password and creates only an admin account. Repeating it with matching
+credentials leaves the account unchanged; it never promotes existing non-admin accounts,
+overwrites passwords, reactivates accounts or resets deployment data. There is no public
+admin registration route. The deployment guide includes a temporary Render start command
+for Free instances and a local terminal alternative.
 
 Cloudinary, Razorpay test keys, Resend, Atlas and hosting are configurable. The local runnable path uses actual MongoDB and labelled mock payments; cloud provider delivery needs supplied credentials and remains unverified in this workspace. See README and deployment configs.
