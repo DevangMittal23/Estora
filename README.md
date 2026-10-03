@@ -72,6 +72,19 @@ reference through reloads while separating new purchases in other tabs. MongoDB
 transactions, atomic unit reservations and conditional wallet debits protect concurrent
 transactions on the server.
 
+## Submit a listing for approval
+
+In **Media & documents**, upload at least **three files under Property images**.
+Supporting documents are saved separately and do not count toward the gallery minimum,
+even when they are JPG or PNG files. You can choose images one at a time; the selection
+list accumulates files and lets you remove a selection before saving.
+
+**Save draft** keeps the listing private. **Save & continue** uploads the selected files
+and opens Review only once three property images are saved. On the final step, select
+**Submit for approval** to send the listing to the admin queue. Active administrators
+receive an in-app notification; their open dashboard and property list refresh every
+15 seconds while visible. No email is sent.
+
 ## Features
 
 - Landing, searchable marketplace, filtering/sorting/pagination, galleries, maps, documents and return calculator.

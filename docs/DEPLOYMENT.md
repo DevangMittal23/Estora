@@ -172,6 +172,11 @@ command. No public admin registration endpoint is added.
    Verify each investor's own portfolio and ledger, exact wallet debits, and correct total
    units sold. Repeat a payment confirmation or investment retry and verify it is not
    credited or debited twice.
+8. In a broker draft, save one property image and two supporting documents. Confirm it
+   stays a draft and requests two more property images before review. Add those images,
+   continue, then select **Submit for approval**. In an admin tab, verify the pending
+   property queue and notification; open queues refresh within 15 seconds while visible.
+   Saving a draft alone does not send an approval request.
 
 ## Deployment boundaries
 

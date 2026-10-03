@@ -297,6 +297,69 @@ describe('HTTP authorization, validation and account workflows', () => {
         .status
     ).toBe(200);
   });
+  test('documents do not count as gallery images; complete submission reaches the admin queue once', async () => {
+    const property = await newProperty({ status: 'DRAFT' });
+    await m.Property.updateOne({ _id: property._id }, { images: [property.images[0]] });
+    const path = `/properties/${property._id}`;
+    const jpeg = Buffer.from([255, 216, 255, 224, 0, 0]);
+    const uploaded = await api('post', `${path}/media`, 'broker')
+      .attach('documents', jpeg, { filename: 'support-one.jpg', contentType: 'image/jpeg' })
+      .attach('documents', jpeg, { filename: 'support-two.jpg', contentType: 'image/jpeg' });
+    expect(uploaded.status).toBe(200);
+    expect(json(uploaded).property.images).toHaveLength(1);
+    expect(json(uploaded).property.documents).toHaveLength(2);
+    expect((await api('post', `${path}/submit`, 'broker')).body.error.code).toBe(
+      'INSUFFICIENT_IMAGES'
+    );
+    const notificationFilter = {
+      type: 'PROPERTY_SUBMITTED',
+      body: `${property.title} has been submitted for review.`,
+    };
+    expect(await m.Notification.countDocuments(notificationFilter)).toBe(0);
+    expect((await m.Property.findById(property._id)).status).toBe('DRAFT');
+    const images = await api('post', `${path}/media`, 'broker')
+      .attach('images', jpeg, { filename: 'gallery-two.jpg', contentType: 'image/jpeg' })
+      .attach('images', jpeg, { filename: 'gallery-three.jpg', contentType: 'image/jpeg' });
+    expect(images.status).toBe(200);
+    expect(json(images).property.images).toHaveLength(3);
+    const submitted = await Promise.all([
+      api('post', `${path}/submit`, 'broker'),
+      api('post', `${path}/submit`, 'broker'),
+    ]);
+    expect(submitted.map((result) => result.status).sort()).toEqual([200, 409]);
+    const queue = await api('get', '/properties?status=PENDING_APPROVAL&limit=100', 'admin');
+    expect(queue.status).toBe(200);
+    expect(json(queue).items.some((item) => item._id === String(property._id))).toBe(true);
+    const notification = await m.Notification.findOne({
+      ...notificationFilter,
+      userId: users.admin._id,
+    });
+    expect(notification.link).toBe('/admin/properties?status=PENDING_APPROVAL');
+    expect(
+      await m.Notification.countDocuments({ ...notificationFilter, userId: users.admin._id })
+    ).toBe(1);
+    const alerts = await api('get', '/notifications?limit=100', 'admin');
+    expect(json(alerts).items.some((item) => item._id === String(notification._id))).toBe(true);
+    expect((await api('post', `${path}/approve`, 'admin')).status).toBe(200);
+  });
+  test('submission and admin notifications roll back together on a notification failure', async () => {
+    const property = await newProperty({ status: 'DRAFT' });
+    const create = jest
+      .spyOn(m.Notification, 'create')
+      .mockRejectedValueOnce(new Error('Notification storage unavailable'));
+    try {
+      await expect(props.submit(property._id)).rejects.toThrow('Notification storage unavailable');
+    } finally {
+      create.mockRestore();
+    }
+    expect((await m.Property.findById(property._id)).status).toBe('DRAFT');
+    expect(
+      await m.Notification.countDocuments({
+        type: 'PROPERTY_SUBMITTED',
+        body: `${property.title} has been submitted for review.`,
+      })
+    ).toBe(0);
+  });
   test('property review notifications link to a page the listing owner can access', async () => {
     for (const role of ['admin', 'broker']) {
       for (const status of ['LIVE', 'REJECTED']) {

@@ -261,7 +261,8 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
       }
       if (step === 2) body.valuation = toPaise(body.valuation);
     } else body = {};
-    body.savedStep = advance ? Math.min(step + 1, 4) : step;
+    // Keep the resume point on Media until uploads and readiness checks finish.
+    body.savedStep = advance && step !== 3 ? Math.min(step + 1, 4) : step;
     let nextId = id;
     let p;
     if (!nextId) {
@@ -279,6 +280,16 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
       setDocuments([]);
     }
     setProperty(p);
+    if (step === 3 && advance) {
+      const missing = Math.max(0, 3 - (p.images?.length || 0));
+      if (missing)
+        throw new Error(
+          `Draft saved. Add ${missing} more property image${missing === 1 ? '' : 's'} under Property images before continuing. Supporting documents do not count.`
+        );
+      p = (await send('patch', `/properties/${nextId}`, { savedStep: 4 }))
+        .property;
+      setProperty(p);
+    }
     if (advance) setStep((s) => Math.min(s + 1, 4));
     return p;
   }, 'Draft saved');
@@ -301,7 +312,24 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
     );
   const upload = (e, kind) => {
     const files = Array.from(e.target.files);
-    const verdict = validateFiles(files, kind === 'images' ? 20 : 10);
+    e.target.value = '';
+    if (!files.length) return;
+    const selected = kind === 'images' ? images : documents;
+    const combined = [...selected];
+    for (const file of files)
+      if (
+        !combined.some(
+          (existing) =>
+            existing.name === file.name &&
+            existing.size === file.size &&
+            existing.type === file.type &&
+            existing.lastModified === file.lastModified
+        )
+      )
+        combined.push(file);
+    const remaining =
+      (kind === 'images' ? 20 : 10) - (property[kind]?.length || 0);
+    const verdict = validateFiles(combined, remaining);
     if (verdict !== true) {
       setFileError(verdict);
       return;
@@ -311,8 +339,33 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
       return;
     }
     setFileError(null);
-    (kind === 'images' ? setImages : setDocuments)(files);
+    (kind === 'images' ? setImages : setDocuments)(combined);
   };
+  const missingImages = Math.max(
+    0,
+    3 - (property.images?.length || 0) - images.length
+  );
+  const pendingFiles = (files, setFiles, kind) =>
+    files.length > 0 && (
+      <ul aria-label={`Selected ${kind}`}>
+        {files.map((file, index) => (
+          <li key={`${file.name}:${file.lastModified}:${index}`}>
+            {file.name}{' '}
+            <Button
+              variant="secondary"
+              disabled={save.isPending}
+              aria-label={`Remove ${kind === 'images' ? 'image' : 'document'} ${file.name}`}
+              onClick={() => {
+                setFiles((current) => current.filter((_, i) => i !== index));
+                setFileError(null);
+              }}
+            >
+              Remove
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
   return (
     <div className="wizard-layout">
       <aside className="wizard-steps">
@@ -332,8 +385,8 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
           </div>
         ))}
         <p>
-          Every step is saved securely. Return to finish your draft whenever
-          you’re ready.
+          Save each step to keep your progress. A draft reaches the admin only
+          after you select Submit for approval on the final step.
         </p>
         {id && <small>Draft reference: {id}</small>}
       </aside>
@@ -477,11 +530,22 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
                 type="file"
                 multiple
                 accept="image/jpeg,image/png,image/webp"
+                aria-label="Property images"
+                disabled={save.isPending}
                 onChange={(e) => upload(e, 'images')}
               />
             </Field>
-            <p>
+            <p aria-live="polite">
               {property.images?.length || 0} saved · {images.length} selected
+            </p>
+            {pendingFiles(images, setImages, 'images')}
+            <p className="notice">
+              {missingImages
+                ? `Add ${missingImages} more property image${missingImages === 1 ? '' : 's'} to continue.`
+                : images.length
+                  ? 'Enough property images selected. Save & continue will upload them for review.'
+                  : 'Your property images are saved. Continue to review, then submit for approval.'}{' '}
+              Supporting documents do not count toward the 3 property images.
             </p>
             <div className="media-preview">
               {property.images?.map((m) => (
@@ -494,15 +558,22 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
             </div>
             <Field
               label="Supporting documents"
-              help="PDF, JPG, PNG or WebP; 5 MB each."
+              help="Optional legal or supporting files. These do not count as gallery images. PDF, JPG, PNG or WebP; 5 MB each."
             >
               <input
                 type="file"
                 multiple
                 accept="application/pdf,image/jpeg,image/png,image/webp"
+                aria-label="Supporting documents"
+                disabled={save.isPending}
                 onChange={(e) => upload(e, 'documents')}
               />
             </Field>
+            <p>
+              {property.documents?.length || 0} documents saved ·{' '}
+              {documents.length} selected
+            </p>
+            {pendingFiles(documents, setDocuments, 'documents')}
             {property.documents?.map((doc) => (
               <MediaLink key={doc.url} media={doc} />
             ))}
@@ -542,9 +613,16 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
               <strong>{property.documents?.length || 0}</strong>
             </div>
             <p className="notice">
-              The platform reviews your listing before it goes live. Financial
-              details become locked once investors hold units.
+              Your listing is still a draft. Select Submit for approval to send
+              it to the admin review queue. Financial details become locked once
+              investors hold units.
             </p>
+            {(property.images?.length || 0) < 3 && (
+              <p className="danger" role="alert">
+                Add {3 - (property.images?.length || 0)} more property images in
+                the previous step. Supporting documents do not count.
+              </p>
+            )}
           </>
         )}
         {save.isError && (
@@ -552,10 +630,15 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
             {errorMessage(save.error)}
           </p>
         )}
+        {submit.isError && (
+          <p className="danger" role="alert">
+            {errorMessage(submit.error)}
+          </p>
+        )}
         <div className="wizard-actions">
           <Button
             variant="secondary"
-            disabled={step === 0 || save.isPending}
+            disabled={step === 0 || save.isPending || submit.isPending}
             onClick={() => setStep((s) => s - 1)}
           >
             Previous step

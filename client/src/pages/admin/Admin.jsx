@@ -28,7 +28,7 @@ import {
   idOf,
 } from '../../utils';
 export function AdminDashboard() {
-  const query = useData('/admin/stats');
+  const query = useData('/admin/stats', {}, { refetchInterval: 15000 });
   return (
     <>
       <Heading
@@ -127,7 +127,7 @@ export function AdminProperties() {
   });
   const [modal, setModal] = useState(null),
     [reason, setReason] = useState('');
-  const query = useData('/properties', params);
+  const query = useData('/properties', params, { refetchInterval: 15000 });
   const action = useAction(async () => {
     const { property: p, type } = modal;
     const body =

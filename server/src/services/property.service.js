@@ -113,6 +113,18 @@ export async function submit(id) {
     property.status = 'PENDING_APPROVAL';
     property.rejectionReason = undefined;
     await property.save({ session });
+    const admins = await User.find({ role: 'ADMIN', isActive: true })
+      .select('_id')
+      .session(session);
+    for (const admin of admins)
+      await notifications.create({
+        userId: admin._id,
+        type: 'PROPERTY_SUBMITTED',
+        title: 'Property awaiting approval',
+        body: `${property.title} has been submitted for review.`,
+        link: '/admin/properties?status=PENDING_APPROVAL',
+        session,
+      });
     return property;
   });
 }

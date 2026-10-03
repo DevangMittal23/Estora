@@ -6,8 +6,8 @@ This record distinguishes completed local verification from hosting-provider ver
 
 | Check | Evidence | Result |
 |---|---|---|
-| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 35 tests passed |
-| Client suite | Vitest and Testing Library | 54 tests passed |
+| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 37 tests passed |
+| Client suite | Vitest and Testing Library | 59 tests passed |
 | Static analysis | Server and client ESLint with zero warnings allowed | Passed |
 | Production client build | Vite build | Passed |
 | API audit | Public, role-scoped, invalid-input, permission, CORS and route checks against disposable API data | 63 checks passed |
@@ -16,6 +16,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Same-browser multi-user sessions | Four tabs in one Chrome profile: admin, broker and two investors; reloads, independent logout and fresh-tab login | Passed |
 | Concurrent browser transactions | Both investor tabs complete labelled mock top-ups and purchases simultaneously, with exact separate wallet credits/debits and investor IDs | Passed |
 | Concurrent HTTP transactions | Eight investors purchase together; four wallets process concurrent duplicate payment confirmations; two purchases compete for one wallet balance | Passed |
+| Listing draft to approval | Separate broker/admin tabs: persist one gallery image and two documents, resume Media, explain missing images, accumulate two selections, submit and approve | Passed |
 
 ## Behavioural coverage represented by the suites
 
@@ -28,12 +29,28 @@ This record distinguishes completed local verification from hosting-provider ver
 - Stale profile/401 responses cannot overwrite or expire a newer account session, and
   old queries are cancelled when switching accounts.
 - Independent CLI administrator creation, password protection and concurrent provisioning.
+- Media selections accumulate across picker uses and can be removed; failed uploads retain
+  selected files and the Media resume step. A retry after saving the Review step fails does
+  not upload already-saved files again. Submission errors remain visible for retry.
+- Supporting documents cannot satisfy the three-gallery-image requirement. Concurrent
+  submission requests create one pending transition and one alert per active administrator;
+  notification failures roll back the transition.
 
 The multi-user browser run used a disposable API at `http://localhost:5010` and frontend
 at `http://localhost:5180`. The four accounts shared one browser profile, so this verifies
 tab isolation rather than relying on incognito windows or separate browser contexts.
 Screenshots: [admin tab](../artifacts/multi-user-admin-tab.png) and
 [investor tab](../artifacts/multi-user-investor-tab.png). Atlas was not changed by this run.
+
+The listing browser check also used the disposable API at ports 5010/5180. It created a
+complete listing through the wizard, saved one gallery image plus two supporting images,
+reopened the draft, and confirmed that continuing requests two more gallery images. Files
+chosen separately then accumulated and uploaded, restoring the Review step only after all
+three images were saved. The final Submit action reached the already-open admin queue
+without a page reload and created an in-app alert. Admin approval made the listing LIVE
+and notified the broker. Screenshots: [Media validation](../artifacts/listing-media-validation.png),
+[ready for review](../artifacts/listing-ready-review.png), and
+[admin queue](../artifacts/listing-admin-queue.png). Only disposable data was changed.
 
 ## Hosting verification still required
 

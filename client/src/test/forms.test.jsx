@@ -109,6 +109,167 @@ describe('property asset resolution', () => {
   });
 });
 describe('saved listing wizard', () => {
+  const mediaDraft = {
+    ...property,
+    status: 'DRAFT',
+    savedStep: 3,
+    images: [{ url: '/image-1.jpg', name: 'Saved image' }],
+    documents: [
+      { url: '/document-1.jpg', name: 'Supporting one.jpg' },
+      { url: '/document-2.jpg', name: 'Supporting two.jpg' },
+    ],
+  };
+  const image = (name) => new File(['image'], name, { type: 'image/jpeg' });
+  it('accumulates image selections, allows removal, and saves all images before review', async () => {
+    const uploaded = {
+      ...mediaDraft,
+      images: [
+        ...mediaDraft.images,
+        { url: '/image-2.jpg' },
+        { url: '/image-3.jpg' },
+      ],
+    };
+    send.mockImplementation(async (method, path, body) => ({
+      property:
+        path.endsWith('/media') || body.savedStep === 4 ? uploaded : mediaDraft,
+    }));
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={mediaDraft} storageKey="test-draft" />);
+    const input = screen.getByLabelText('Property images');
+    const second = image('second.jpg'),
+      third = image('third.jpg');
+    await user.upload(input, second);
+    await user.upload(input, third);
+    await user.upload(input, second);
+    expect(screen.getByText('1 saved · 2 selected')).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Remove image third.jpg' })
+    );
+    expect(screen.getByText('1 saved · 1 selected')).toBeInTheDocument();
+    await user.upload(input, third);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    expect(
+      await screen.findByText('Ready for a considered review.')
+    ).toBeInTheDocument();
+    const upload = send.mock.calls.find(([, path]) => path.endsWith('/media'));
+    expect(upload[2].getAll('images').map((file) => file.name)).toEqual([
+      'second.jpg',
+      'third.jpg',
+    ]);
+    expect(send.mock.calls[0][2]).toEqual({ savedStep: 3 });
+    expect(send.mock.calls[2][2]).toEqual({ savedStep: 4 });
+    expect(
+      screen.getByRole('button', { name: 'Submit for approval' })
+    ).toBeEnabled();
+    expect(send.mock.calls.some(([, path]) => path.endsWith('/submit'))).toBe(
+      false
+    );
+  });
+  it('saves an incomplete draft on Media and explains why documents do not count', async () => {
+    send.mockResolvedValue({ property: mediaDraft });
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={mediaDraft} storageKey="test-draft" />);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Draft saved. Add 2 more property images'
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Supporting documents do not count.'
+    );
+    expect(screen.getByLabelText('Property images')).toBeInTheDocument();
+    expect(send).toHaveBeenCalledExactlyOnceWith(
+      'patch',
+      '/properties/property-1',
+      { savedStep: 3 }
+    );
+  });
+  it('preserves selected files and the Media resume step when uploading fails', async () => {
+    send.mockImplementation(async (method, path) => {
+      if (path.endsWith('/media'))
+        throw new Error('Upload temporarily unavailable');
+      return { property: mediaDraft };
+    });
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={mediaDraft} storageKey="test-draft" />);
+    await user.upload(screen.getByLabelText('Property images'), [
+      image('second.jpg'),
+      image('third.jpg'),
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Upload temporarily unavailable'
+    );
+    expect(screen.getByText('1 saved · 2 selected')).toBeInTheDocument();
+    expect(
+      send.mock.calls
+        .filter(([method]) => method === 'patch')
+        .map(([, , body]) => body.savedStep)
+    ).toEqual([3]);
+  });
+  it('does not upload saved images twice when saving the Review resume point fails', async () => {
+    const uploaded = {
+      ...mediaDraft,
+      images: [1, 2, 3].map((i) => ({ url: `/image-${i}.jpg` })),
+    };
+    let mediaSaved = false,
+      failReview = true;
+    send.mockImplementation(async (method, path, body) => {
+      if (path.endsWith('/media')) mediaSaved = true;
+      if (body.savedStep === 4 && failReview) {
+        failReview = false;
+        throw new Error('Save interrupted');
+      }
+      return { property: mediaSaved ? uploaded : mediaDraft };
+    });
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={mediaDraft} storageKey="test-draft" />);
+    await user.upload(screen.getByLabelText('Property images'), [
+      image('second.jpg'),
+      image('third.jpg'),
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Save interrupted'
+    );
+    expect(screen.getByText('3 saved · 0 selected')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    await screen.findByText('Ready for a considered review.');
+    expect(
+      send.mock.calls.filter(([, path]) => path.endsWith('/media'))
+    ).toHaveLength(1);
+  });
+  it('shows submission failures and preserves the draft for an explicit retry', async () => {
+    const initial = {
+      ...mediaDraft,
+      savedStep: 4,
+      images: [1, 2, 3].map((i) => ({ url: `/image-${i}.jpg` })),
+    };
+    localStorage.setItem('test-draft', initial._id);
+    send
+      .mockRejectedValueOnce(new Error('Review service unavailable'))
+      .mockResolvedValueOnce({
+        property: { ...initial, status: 'PENDING_APPROVAL' },
+      });
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={initial} storageKey="test-draft" />);
+    await user.click(
+      screen.getByRole('button', { name: 'Submit for approval' })
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Review service unavailable'
+    );
+    expect(localStorage.getItem('test-draft')).toBe(initial._id);
+    await user.click(
+      screen.getByRole('button', { name: 'Submit for approval' })
+    );
+    await vi.waitFor(() =>
+      expect(localStorage.getItem('test-draft')).toBeNull()
+    );
+    expect(send.mock.calls.map(([, path]) => path)).toEqual([
+      '/properties/property-1/submit',
+      '/properties/property-1/submit',
+    ]);
+  });
   it('preserves financial input when navigating back and saving the location step', async () => {
     const initial = {
       ...property,
