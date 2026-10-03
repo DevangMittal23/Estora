@@ -97,6 +97,30 @@ Use the API origin only; do not append `/api/v1`. The client appends that path i
 
 6. Deploy and copy the resulting production URL, for example `https://estora.vercel.app`.
 
+### Vercel Web Analytics
+
+The frontend includes `@vercel/analytics/react` once at its root. Its production
+script automatically records page views, including React Router navigation. Local
+development does not load analytics. Password-recovery pages are excluded, and
+URL query parameters and fragments are removed before events are sent.
+
+1. Open **Vercel → estora → Analytics**. If **Enable** appears, click it.
+   A **Get Started** screen means the frontend package still needs to be deployed.
+   The onboarding framework dropdown should be **React**, since ESTORA uses Vite.
+2. Deploy the latest `main` commit; if analytics was enabled after that build,
+   redeploy once to provision Vercel's collection endpoints.
+3. Visit the production website and navigate to a few pages.
+4. Return to **Analytics**, choose **Production** and a date range such as
+   **Last 24 Hours**. Review visitors, page views, popular pages, referrers,
+   countries and devices. Collection starts after setup; earlier visits are not recovered.
+5. If data is missing after around 30 seconds, check content blockers and confirm
+   DevTools Network loads `/_vercel/insights/script.js` as JavaScript and sends
+   analytics requests successfully. The Render API is separate from this integration.
+
+No analytics API key or additional frontend environment variable is needed for
+this Vercel-hosted setup. See [Vercel's setup guide](https://vercel.com/docs/analytics/quickstart)
+and [dashboard guide](https://vercel.com/docs/analytics/using-web-analytics).
+
 ## 4. Finish the CORS connection
 
 Return to Render and change `CLIENT_URL` to the exact Vercel production origin:

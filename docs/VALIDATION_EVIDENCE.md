@@ -7,7 +7,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Check | Evidence | Result |
 |---|---|---|
 | Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 40 tests passed |
-| Client suite | Vitest and Testing Library | 73 tests passed |
+| Client suite | Vitest and Testing Library | 81 tests passed |
 | Static analysis | Server and client ESLint with zero warnings allowed | Passed |
 | Production client build | Vite build | Passed |
 | API audit | Public, role-scoped, invalid-input, permission, CORS and route checks against disposable API data | 63 checks passed |
@@ -19,6 +19,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Listing draft to approval | Separate broker/admin tabs: persist one gallery image and two documents, resume Media, explain missing images, accumulate two selections, submit and approve | Passed |
 | Saved property gallery | Save draft adds photos to the gallery; reload preserves them; Continue uses saved media; misplaced supporting photos move without reupload | Passed |
 | Authenticated marketplace navigation | Admin, broker and investor retain workspace sidebar/header through marketplace, detail, refresh, shared pages and error routes; mobile menu and logout verified | Passed |
+| Vercel Analytics integration | Eight regressions for recovery-page exclusion, URL redaction, development opt-out and one production SDK script under StrictMode | Passed |
 
 ## Behavioural coverage represented by the suites
 
@@ -82,6 +83,7 @@ The Render deployment shown in the provider log did not start because `MONGO_URI
 |---|---|
 | `GET https://<render-api>/ready` | HTTP 200 after Atlas connection |
 | Vercel landing, login and property deep link | Page loads with no SPA 404 |
+| Vercel Web Analytics after dashboard enablement and redeployment | Script loads, page views are submitted and visits appear in the Analytics dashboard |
 | Browser request to `/api/v1/properties` | HTTP 200 and no CORS error |
 | Cloudinary-backed dummy upload | Authenticated media is retrievable only through authorized API flow |
 | Razorpay test top-up | Test payment verifies server-side and writes one ledger credit |
