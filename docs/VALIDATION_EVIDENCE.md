@@ -6,13 +6,16 @@ This record distinguishes completed local verification from hosting-provider ver
 
 | Check | Evidence | Result |
 |---|---|---|
-| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 28 tests passed |
-| Client suite | Vitest and Testing Library | 46 tests passed |
+| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 35 tests passed |
+| Client suite | Vitest and Testing Library | 54 tests passed |
 | Static analysis | Server and client ESLint with zero warnings allowed | Passed |
 | Production client build | Vite build | Passed |
 | API audit | Public, role-scoped, invalid-input, permission, CORS and route checks against disposable API data | 63 checks passed |
 | Browser smoke flow | Mock wallet top-up, one-unit investment, portfolio update, investor/broker/admin pages and responsive layouts | Passed |
 | Independent design evaluation | Desktop, tablet and mobile rendered views | Pass |
+| Same-browser multi-user sessions | Four tabs in one Chrome profile: admin, broker and two investors; reloads, independent logout and fresh-tab login | Passed |
+| Concurrent browser transactions | Both investor tabs complete labelled mock top-ups and purchases simultaneously, with exact separate wallet credits/debits and investor IDs | Passed |
+| Concurrent HTTP transactions | Eight investors purchase together; four wallets process concurrent duplicate payment confirmations; two purchases compete for one wallet balance | Passed |
 
 ## Behavioural coverage represented by the suites
 
@@ -21,6 +24,16 @@ This record distinguishes completed local verification from hosting-provider ver
 - Authentication, role checks, account activity checks, private KYC media and ownership enforcement.
 - Property review flows, accessible notification links and participant-scoped enquiries.
 - Client route guards, validation, dialogs, state reset after password recovery, pagination, media links and scrolling.
+- Tab-specific authentication and purchase retry keys; old shared tokens are ignored.
+- Stale profile/401 responses cannot overwrite or expire a newer account session, and
+  old queries are cancelled when switching accounts.
+- Independent CLI administrator creation, password protection and concurrent provisioning.
+
+The multi-user browser run used a disposable API at `http://localhost:5010` and frontend
+at `http://localhost:5180`. The four accounts shared one browser profile, so this verifies
+tab isolation rather than relying on incognito windows or separate browser contexts.
+Screenshots: [admin tab](../artifacts/multi-user-admin-tab.png) and
+[investor tab](../artifacts/multi-user-investor-tab.png). Atlas was not changed by this run.
 
 ## Hosting verification still required
 

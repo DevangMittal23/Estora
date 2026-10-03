@@ -570,6 +570,97 @@ describe('Admin-owned listing enquiries', () => {
     ).toBe(403);
   });
 });
+describe('Concurrent HTTP transactions across independent accounts', () => {
+  const asUser = (user, method, path) => {
+    const req = request(app)[method](`/api/v1${path}`);
+    return req.set(
+      'Authorization',
+      `Bearer ${jwt.sign({ userId: String(user._id), role: user.role }, process.env.JWT_SECRET)}`
+    );
+  };
+  test('eight users buy concurrently without mixing wallet, portfolio or ledger data', async () => {
+    const property = await newProperty({ units: 400, price: 101 });
+    const buyers = [];
+    for (let i = 0; i < 8; i++) buyers.push(await newInvestor(10000));
+    const results = await Promise.all(
+      buyers.map((user) =>
+        asUser(user, 'post', '/investments').send({
+          propertyId: String(property._id),
+          units: 40,
+          idempotencyKey: unique(),
+        })
+      )
+    );
+    expect(results.every((result) => result.status === 201)).toBe(true);
+    expect((await m.Property.findById(property._id)).unitsSold).toBe(320);
+    for (let i = 0; i < buyers.length; i++) {
+      const user = buyers[i];
+      expect(String(json(results[i]).investment.investorId)).toBe(String(user._id));
+      expect((await m.User.findById(user._id)).walletBalance).toBe(5960);
+      expect(await ledger.getBalance(user._id)).toBe(5960);
+      const ownResponse = await asUser(user, 'get', '/investments/me');
+      expect(ownResponse.status).toBe(200);
+      const own = json(ownResponse);
+      expect(own.items).toHaveLength(1);
+      expect(String(own.items[0].investorId)).toBe(String(user._id));
+      const entries = json(await asUser(user, 'get', '/transactions'));
+      expect(entries.items.every((entry) => String(entry.userId) === String(user._id))).toBe(true);
+    }
+  });
+  test('concurrent payment confirmations credit each user once per order', async () => {
+    const holders = [];
+    const confirmations = [];
+    for (let i = 0; i < 4; i++) {
+      const user = await newInvestor(0);
+      holders.push(user);
+      for (const amount of [200, 300]) {
+        const order = json(await asUser(user, 'post', '/wallet/topup/order').send({ amount }));
+        const body = {
+          razorpayOrderId: order.orderId,
+          razorpayPaymentId: `mock_${unique()}`,
+          razorpaySignature: 'mock',
+        };
+        confirmations.push(
+          asUser(user, 'post', '/wallet/topup/verify').send(body),
+          asUser(user, 'post', '/wallet/topup/verify').send(body)
+        );
+      }
+    }
+    const results = await Promise.all(confirmations);
+    expect(results.filter((result) => result.status === 200)).toHaveLength(8);
+    expect(results.filter((result) => result.body.error?.code === 'DUPLICATE_TOPUP')).toHaveLength(
+      8
+    );
+    for (const user of holders) {
+      expect((await m.User.findById(user._id)).walletBalance).toBe(500);
+      expect(await ledger.getBalance(user._id)).toBe(500);
+      expect(await m.Transaction.countDocuments({ userId: user._id, type: 'TOPUP' })).toBe(2);
+    }
+  });
+  test('simultaneous purchases of different properties cannot overspend one wallet', async () => {
+    const user = await newInvestor(1000);
+    const a = await newProperty(),
+      b = await newProperty();
+    const results = await Promise.all(
+      [a, b].map((property) =>
+        asUser(user, 'post', '/investments').send({
+          propertyId: String(property._id),
+          units: 7,
+          idempotencyKey: unique(),
+        })
+      )
+    );
+    expect(results.filter((result) => result.status === 201)).toHaveLength(1);
+    expect(results.find((result) => result.status !== 201).body.error.code).toBe(
+      'INSUFFICIENT_BALANCE'
+    );
+    expect((await m.User.findById(user._id)).walletBalance).toBe(300);
+    expect(await ledger.getBalance(user._id)).toBe(300);
+    expect(await m.Investment.countDocuments({ investorId: user._id })).toBe(1);
+    const properties = await m.Property.find({ _id: { $in: [a._id, b._id] } });
+    expect(properties.reduce((sum, property) => sum + property.unitsSold, 0)).toBe(7);
+  });
+});
 describe('Financial properties against a real MongoDB replica set (100 runs each)', () => {
   test('CP1: wallet counter equals ledger after every operation', async () => {
     await fc.assert(

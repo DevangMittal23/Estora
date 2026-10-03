@@ -52,10 +52,10 @@ export function toPaise(value) {
 }
 export function investmentKey(userId, propertyId, units) {
   const storageKey = `estora-invest:${userId}:${propertyId}:${units}`;
-  let key = localStorage.getItem(storageKey);
+  let key = sessionStorage.getItem(storageKey);
   if (!key) {
     key = crypto.randomUUID();
-    localStorage.setItem(storageKey, key);
+    sessionStorage.setItem(storageKey, key);
   }
   return { key, storageKey };
 }

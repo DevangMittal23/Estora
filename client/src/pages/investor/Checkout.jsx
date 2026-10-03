@@ -108,7 +108,7 @@ export function CheckoutForm({ property: p, wallet, user, existingUnits = 0 }) {
       units,
       idempotencyKey: key,
     });
-    localStorage.removeItem(storageKey);
+    sessionStorage.removeItem(storageKey);
     setResult(data);
     setConfirm(false);
     return data;

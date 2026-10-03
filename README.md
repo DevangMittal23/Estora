@@ -58,6 +58,20 @@ It refuses to promote another account or overwrite an existing admin password. T
 demo credentials above are not created automatically during deployment. See the
 [admin setup instructions](docs/DEPLOYMENT.md#5-create-your-deployed-admin-account).
 
+## Use multiple accounts at once
+
+Open the site in separate browser tabs and sign in to an account in each tab. An admin,
+broker and multiple investors can work at the same time in the same browser profile.
+Each tab keeps its own login through reloads; logging out affects only that tab. Closing
+the tab ends its session. A browser's Duplicate Tab action can copy the initial session,
+but subsequent login and logout remain independent.
+
+After updating from the earlier shared-login version, reload the site and sign in again
+in each tab. Purchase retry keys are also scoped to the tab, preserving a failed request's
+reference through reloads while separating new purchases in other tabs. MongoDB
+transactions, atomic unit reservations and conditional wallet debits protect concurrent
+transactions on the server.
+
 ## Features
 
 - Landing, searchable marketplace, filtering/sorting/pagination, galleries, maps, documents and return calculator.

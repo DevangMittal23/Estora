@@ -164,6 +164,14 @@ command. No public admin registration endpoint is added.
 3. Register a test investor, sign in and browse the marketplace.
 4. Upload only dummy KYC documents and use Razorpay test mode only.
 5. Check browser DevTools for CORS errors. A CORS error normally means `CLIENT_URL` does not exactly match the Vercel origin or the Vercel build used the wrong `VITE_API_URL`.
+6. Open separate tabs in the same browser profile and sign in as admin, broker and two
+   investors. Reload each tab and confirm it retains its own account. Log out of the
+   admin tab and confirm the other three remain signed in. After deploying the tab-session
+   update, existing tabs need a reload and a fresh login; old shared tokens are not reused.
+7. With approved demo investors and sufficient test funds, submit purchases simultaneously.
+   Verify each investor's own portfolio and ledger, exact wallet debits, and correct total
+   units sold. Repeat a payment confirmation or investment retry and verify it is not
+   credited or debited twice.
 
 ## Deployment boundaries
 

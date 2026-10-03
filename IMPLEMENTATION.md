@@ -27,13 +27,20 @@ The six supplied documents were reviewed. The final `docs/requirements.md` defin
 
 Client tests verify guards, validation, query states, unit/cap/terms gating, failed investment retry key reuse and stale sale-price preview blocking. The browser evaluation checks representative public/investor/broker/admin pages across desktop/tablet/mobile. This is focused verification, not a claim that every example test in the original task document exists verbatim.
 
-The current suites have 32 backend and 47 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+The current suites have 35 backend and 54 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. Multi-user HTTP regressions verify eight concurrent purchases, duplicate payment confirmations across four independent wallets and competing purchases against one wallet. Client regressions cover tab-specific tokens, reload persistence, stale profile/401 protection, query cancellation and purchase retry identity. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
 
 The commercial frontend refresh uses a navy/ivory/emerald palette, architectural concept imagery, a literal fractional ownership example and clear funding-to-sale explanations. Shared public, authentication and workspace layouts improve mobile navigation, forms, tables and empty states. Generated architecture is labelled illustrative; financial projections remain estimates and the demo status is explicit.
 
 The latest isolated browser smoke check completed a labelled mock top-up and a one-unit investment, then verified the wallet credit, purchase confirmation and updated portfolio ownership. Public, investor, broker and admin pages were checked, including listing analytics, creation, review queues, sale entry, settings and shared account pages. Mobile navigation and anchor-to-route scrolling were exercised; representative layouts had no page-wide horizontal overflow at 360, 375 and 768 pixels. Desktop/mobile screenshots are stored in `artifacts/commercial-*.png`.
 
 A separate runtime audit passed 63 API checks against the disposable demo: public and role-specific endpoints, permission boundaries, malformed/missing IDs, invalid queries, unknown endpoints and CORS. These checks used a disposable replica-set database on port 5001 with the frontend on 5174; the configured Atlas data was not mutated. Lint and frontend production build also pass. This is bounded regression and smoke verification rather than a claim that every possible workflow has been exhausted.
+
+A later Chrome check used four tabs in a single browser profile at ports 5010/5180:
+admin, broker and two investors stayed signed in independently through reloads. Both
+investors completed simultaneous mock top-ups and purchases with their correct wallet
+credits/debits and investment ownership. Admin logout left all other accounts signed in;
+a fresh tab required its own login. The disposable demo was stopped afterward. Screenshots
+are in `artifacts/multi-user-admin-tab.png` and `artifacts/multi-user-investor-tab.png`.
 
 Production dependency audit: the server reports zero advisories. The client reports two moderate entries for the required React Router v6 packages: an open-redirect advisory and an SSR hydration advisory. This client does not use SSR hydration, and notification links reject external paths and backslashes. No patched v6 release was offered by the audit; a future major router upgrade should be reviewed separately.
 
@@ -46,6 +53,9 @@ Secondary pages now include shared Back navigation following the user's subseque
 - Stored unit prices are whole **paise**, not whole rupees; this follows the final requirements over an earlier wording error.
 - Seven investors satisfy APPROVED/PENDING/REJECTED/NOT_SUBMITTED examples; eight property rows retain the requested status distribution.
 - JWT logout is client-only. The later requirements explicitly exclude refresh tokens and blocklists despite earlier examples.
+- The user's later multi-user request supersedes shared local-storage authentication.
+  Tokens and purchase retry references now use tab-specific session storage. API queries
+  are scoped to the current session, and account changes cancel queries and clear caches.
 - Partial drafts may omit fields in storage; a submitted listing cannot. Media and gateway order records are additional supporting collections.
 - Zero-valued payouts/fees produce no money movement, while the payout record still accounts for their exact zero shares.
 - Seeding refuses to erase an existing configured database unless `ALLOW_SEED_RESET=true` is explicitly set. Disposable tests/demos pass an explicit reset argument.
