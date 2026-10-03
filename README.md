@@ -11,7 +11,7 @@ npm run install:all
 npm run demo
 ```
 
-Open **http://localhost:5173**. Use `localhost` consistently; the API permits that frontend origin. The API runs at http://localhost:5000 and health is at `/health`.
+Open https://estora-pi.vercel.app/ . Use `localhost` consistently; the API permits that frontend origin. The API runs at http://localhost:5000 and health is at `/health`.
 
 The demo starts a **real, disposable MongoDB replica set**, seeds eight properties and ten users, and runs the React client. No Atlas, payment or media credentials are needed. MongoDB binaries are cached inside `server/.local/`. **Demo data resets on restart.** Stop both processes with Ctrl+C. Mock top-ups are explicitly labelled in the wallet. Authentication, permissions, money accounting and transactions use the real backend/database.
 
