@@ -60,6 +60,10 @@ demo credentials above are not created automatically during deployment. See the
 
 ## Use multiple accounts at once
 
+Once signed in, marketplace and property-detail pages stay inside your role's workspace,
+with the same sidebar, account header and notifications. Direct links and reloads restore
+that workspace. Visitors and logged-out sessions use the public navigation.
+
 Open the site in separate browser tabs and sign in to an account in each tab. An admin,
 broker and multiple investors can work at the same time in the same browser profile.
 Each tab keeps its own login through reloads; logging out affects only that tab. Closing

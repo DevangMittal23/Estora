@@ -1274,6 +1274,14 @@ footer > span {
   margin: auto;
   min-height: calc(100vh - 133px);
 }
+.workspace > .public-section {
+  max-width: none;
+  padding: 0;
+}
+.sidebar-bottom > a.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
 .page-back {
   margin-bottom: 22px;
 }

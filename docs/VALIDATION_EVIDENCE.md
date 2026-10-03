@@ -7,7 +7,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Check | Evidence | Result |
 |---|---|---|
 | Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 40 tests passed |
-| Client suite | Vitest and Testing Library | 61 tests passed |
+| Client suite | Vitest and Testing Library | 73 tests passed |
 | Static analysis | Server and client ESLint with zero warnings allowed | Passed |
 | Production client build | Vite build | Passed |
 | API audit | Public, role-scoped, invalid-input, permission, CORS and route checks against disposable API data | 63 checks passed |
@@ -18,6 +18,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Concurrent HTTP transactions | Eight investors purchase together; four wallets process concurrent duplicate payment confirmations; two purchases compete for one wallet balance | Passed |
 | Listing draft to approval | Separate broker/admin tabs: persist one gallery image and two documents, resume Media, explain missing images, accumulate two selections, submit and approve | Passed |
 | Saved property gallery | Save draft adds photos to the gallery; reload preserves them; Continue uses saved media; misplaced supporting photos move without reupload | Passed |
+| Authenticated marketplace navigation | Admin, broker and investor retain workspace sidebar/header through marketplace, detail, refresh, shared pages and error routes; mobile menu and logout verified | Passed |
 
 ## Behavioural coverage represented by the suites
 
@@ -62,6 +63,16 @@ field visibly states the three-image minimum. Screenshot:
 API regressions cover concurrent repeated moves, file-type checks, property ownership,
 private-media rejection, gallery limits and locking after submission. No files are copied
 or reuploaded when moved; legal supporting images move only on an explicit action.
+
+The session-layout browser check used three account tabs against the disposable demo at
+ports 5010/5180. Clicking Explore marketplace retained the existing sidebar DOM element,
+header and account identity; property details and reloads showed the correct role's
+workspace. Profile, notifications, forbidden and unknown routes also retained it. Mobile
+checks at 360px and 768px confirmed drawer closure and no horizontal overflow. Logout
+restored public navigation and public browsing in that tab. Client regressions cover
+profile restoration/loading/retry, permissions, direct visits and layout changes on logout.
+Screenshots: [admin marketplace](../artifacts/workspace-admin-marketplace.png) and
+[mobile marketplace](../artifacts/workspace-marketplace-mobile.png). No Atlas data changed.
 
 ## Hosting verification still required
 

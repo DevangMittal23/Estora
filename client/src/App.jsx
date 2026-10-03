@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { RouteScroll } from './components/RouteScroll';
 import { AuthProvider } from './context/AuthContext';
-import { PublicLayout, DashboardLayout } from './layouts/Layouts';
+import { SessionLayout } from './layouts/Layouts';
 import { ProtectedRoute, RoleRoute, BrokerGuard } from './routes/Guards';
 import {
   Landing,
@@ -42,7 +42,7 @@ export default function App() {
       <BrowserRouter>
         <RouteScroll />
         <Routes>
-          <Route element={<PublicLayout />}>
+          <Route element={<SessionLayout />}>
             <Route path="/" element={<Landing />} />
             <Route path="/properties" element={<Marketplace />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
@@ -59,9 +59,7 @@ export default function App() {
             />
             <Route path="/forbidden" element={<ErrorPage forbidden />} />
             <Route path="*" element={<ErrorPage />} />
-          </Route>
-          <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout />}>
+            <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route element={<RoleRoute role="INVESTOR" />}>

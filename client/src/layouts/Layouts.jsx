@@ -27,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { PageBack } from '../components/PageBack';
 import { useData } from '../api';
 import { compactMoney, homeFor, label } from '../utils';
+import { ProtectedRoute } from '../routes/Guards';
 const navigation = {
   INVESTOR: [
     ['Overview', '/investor', LayoutDashboard],
@@ -54,8 +55,9 @@ const navigation = {
   ],
 };
 export function Logo() {
+  const { user } = useAuth();
   return (
-    <Link to="/" className="logo">
+    <Link to={user ? homeFor(user) : '/'} className="logo">
       <span className="logo-mark">E</span>ESTORA
       <span className="logo-dot">.</span>
     </Link>
@@ -95,6 +97,13 @@ export function Footer() {
       </div>
     </footer>
   );
+}
+// A signed-in session keeps the same workspace across public and role routes.
+export function SessionLayout() {
+  const { token, user } = useAuth();
+  // Reuse profile loading/retry handling so refresh never flashes visitor nav.
+  if (token && !user) return <ProtectedRoute />;
+  return user ? <DashboardLayout /> : <PublicLayout />;
 }
 export function PublicLayout() {
   const { user } = useAuth();
@@ -177,11 +186,16 @@ export function PublicLayout() {
 }
 export function DashboardLayout() {
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const sidebarRef = useRef(null);
   const menuRef = useRef(null);
   const [mobile, setMobile] = useState(
     () => window.matchMedia('(max-width: 768px)').matches
+  );
+  useEffect(
+    () => setOpen(false),
+    [location.pathname, location.search, location.hash]
   );
   useEffect(() => {
     const media = window.matchMedia('(max-width: 768px)');
@@ -259,11 +273,11 @@ export function DashboardLayout() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <Link to="/properties">
+          <NavLink to="/properties" onClick={() => setOpen(false)}>
             <Building2 size={19} />
             Explore marketplace
             <ArrowUpRight size={16} />
-          </Link>
+          </NavLink>
           <Link to="/notifications">
             <Bell size={19} />
             Notifications

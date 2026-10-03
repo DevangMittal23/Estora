@@ -27,7 +27,7 @@ The six supplied documents were reviewed. The final `docs/requirements.md` defin
 
 Client tests verify guards, validation, query states, unit/cap/terms gating, failed investment retry key reuse and stale sale-price preview blocking. The browser evaluation checks representative public/investor/broker/admin pages across desktop/tablet/mobile. This is focused verification, not a claim that every example test in the original task document exists verbatim.
 
-The current suites have 40 backend and 61 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. Multi-user HTTP regressions verify eight concurrent purchases, duplicate payment confirmations across four independent wallets and competing purchases against one wallet. Client regressions cover tab-specific tokens, reload persistence, stale profile/401 protection, query cancellation and purchase retry identity. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+The current suites have 40 backend and 73 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. Multi-user HTTP regressions verify eight concurrent purchases, duplicate payment confirmations across four independent wallets and competing purchases against one wallet. Client regressions cover tab-specific tokens, reload persistence, stale profile/401 protection, query cancellation and purchase retry identity. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
 
 The commercial frontend refresh uses a navy/ivory/emerald palette, architectural concept imagery, a literal fractional ownership example and clear funding-to-sale explanations. Shared public, authentication and workspace layouts improve mobile navigation, forms, tables and empty states. Generated architecture is labelled illustrative; financial projections remain estimates and the demo status is explicit.
 
@@ -45,6 +45,14 @@ are in `artifacts/multi-user-admin-tab.png` and `artifacts/multi-user-investor-t
 Production dependency audit: the server reports zero advisories. The client reports two moderate entries for the required React Router v6 packages: an open-redirect advisory and an SSR hydration advisory. This client does not use SSR hydration, and notification links reject external paths and backslashes. No patched v6 release was offered by the audit; a future major router upgrade should be reviewed separately.
 
 ## Resolved document conflicts
+
+Following the user's navigation request, one session-aware layout surrounds both public
+and protected routes. Signed-in users keep their role's sidebar and header on the marketplace,
+property detail, shared pages and error routes; visitors keep public navigation. Profile
+restoration waits before selecting a layout. Role and broker guards still enforce access.
+Marketplace/detail content uses workspace spacing, and mobile route changes close the drawer.
+Desktop and mobile browser verification covered all three roles, direct detail reloads,
+shared/error pages and logout. Layout regressions cover the same session boundaries.
 
 Secondary pages now include shared Back navigation following the user's subsequent request. Landing and investor/broker/admin homepages are excluded. Direct visits fall back to the appropriate homepage; the wizard retains a separate Previous step action. Navigation tests cover route exclusions, direct-entry fallback and browser history.
 
