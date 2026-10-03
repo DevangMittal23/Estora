@@ -86,12 +86,28 @@ const amountSchema = z.string().refine((v) => {
     return false;
   }
 }, 'Enter a positive amount with at most two decimals.');
+export const withdrawalAmountSchema = (balance) =>
+  amountSchema.refine(
+    (value) => {
+      try {
+        return toPaise(value) <= balance;
+      } catch {
+        return false;
+      }
+    },
+    {
+      message:
+        balance > 0
+          ? `Enter an amount no greater than ${money(balance)}.`
+          : 'Add funds before requesting a withdrawal.',
+    }
+  );
 function MoneyForm({ mode, balance, onClose }) {
   const [mockOrder, setMockOrder] = useState(null);
   const schema =
     mode === 'withdraw'
       ? z.object({
-          amount: amountSchema,
+          amount: withdrawalAmountSchema(balance),
           accountName: z.string().min(2, 'Enter account holder name.'),
           accountNumber: z
             .string()
@@ -204,6 +220,11 @@ function MoneyForm({ mode, balance, onClose }) {
           <Field
             label="Amount (₹)"
             inputMode="decimal"
+            help={
+              mode === 'topup'
+                ? 'Test mode only. For a quick test payment, try a small amount such as ₹100.'
+                : undefined
+            }
             {...register('amount')}
             error={errors.amount?.message}
           />
@@ -213,6 +234,9 @@ function MoneyForm({ mode, balance, onClose }) {
                 Available balance: {money(balance)}. Funds are debited only
                 after admin approval. Use dummy bank details.
               </p>
+              {balance <= 0 && (
+                <p className="small">Add funds before requesting a withdrawal.</p>
+              )}
               <Field
                 label="Account holder name"
                 {...register('accountName')}
@@ -233,7 +257,11 @@ function MoneyForm({ mode, balance, onClose }) {
           {action.isError && (
             <p className="danger">{errorMessage(action.error)}</p>
           )}
-          <Button type="submit" loading={action.isPending}>
+          <Button
+            type="submit"
+            loading={action.isPending}
+            disabled={mode === 'withdraw' && balance <= 0}
+          >
             {mode === 'withdraw' ? 'Request withdrawal' : 'Continue to payment'}
           </Button>
         </form>

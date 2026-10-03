@@ -4,6 +4,7 @@ export class ApiError extends Error {
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
+    this.expose = true;
   }
 }
 export function ensure(condition, status, code, message) {

@@ -23,9 +23,25 @@ export async function getWallet(userId) {
 export async function createOrder(userId, amount) {
   integer(amount);
   ensure(amount <= 10000000000, 400, 'INVALID_AMOUNT', 'Maximum top-up is ₹10 crore');
-  const gateway = razorpay
-    ? await razorpay.orders.create({ amount, currency: 'INR', receipt: crypto.randomUUID() })
-    : { id: `order_mock_${crypto.randomUUID()}` };
+  let gateway;
+  try {
+    gateway = razorpay
+      ? await razorpay.orders.create({ amount, currency: 'INR', receipt: crypto.randomUUID() })
+      : { id: `order_mock_${crypto.randomUUID()}` };
+  } catch (error) {
+    console.error('Razorpay order creation failed', error);
+    if (error.statusCode === 400)
+      throw new ApiError(
+        400,
+        'PAYMENT_ORDER_REJECTED',
+        'The payment provider rejected this amount. Enter a smaller test amount and try again.'
+      );
+    throw new ApiError(
+      502,
+      'PAYMENT_PROVIDER_UNAVAILABLE',
+      'The payment provider could not create an order. Please try again shortly.'
+    );
+  }
   await TopupOrder.create({ userId, orderId: gateway.id, amount, mode: env.PAYMENT_MODE });
   return {
     orderId: gateway.id,

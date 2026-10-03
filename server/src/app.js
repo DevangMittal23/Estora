@@ -17,6 +17,10 @@ import shared from './routes/shared.routes.js';
 import { z } from 'zod';
 const app = express();
 app.disable('x-powered-by');
+// Render sits in front of the service and forwards the visitor address in
+// X-Forwarded-For. Trust exactly that one proxy so rate limiting identifies
+// visitors correctly without trusting arbitrary forwarded headers locally.
+if (env.NODE_ENV === 'production') app.set('trust proxy', 1);
 app.use(
   cors({
     origin: (origin, callback) =>

@@ -17,6 +17,7 @@ import {
 import { signupSchema } from '../pages/public/Auth';
 import { financialSchema, WizardForm } from '../pages/broker/Wizard';
 import { validateFiles } from '../pages/investor/KYC';
+import { withdrawalAmountSchema } from '../pages/investor/Wallet';
 import { money, toPaise, investmentKey } from '../utils';
 import { send, get, api } from '../api';
 vi.mock('../api', async (importOriginal) => ({
@@ -213,6 +214,11 @@ describe('financial and identity input handling', () => {
       validateFiles([{ type: 'application/pdf', size: 6 * 1024 * 1024 }])
     ).not.toBe(true);
     expect(validateFiles([{ type: 'text/plain', size: 1 }])).not.toBe(true);
+  });
+  it('prevents a withdrawal request that exceeds the displayed balance', () => {
+    expect(withdrawalAmountSchema(10_000).safeParse('100.01').success).toBe(false);
+    expect(withdrawalAmountSchema(10_000).safeParse('100.00').success).toBe(true);
+    expect(withdrawalAmountSchema(0).safeParse('1').success).toBe(false);
   });
   it('keeps the same investment reference through retries and reloads', () => {
     const first = investmentKey('user', 'property', 5);

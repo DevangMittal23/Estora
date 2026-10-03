@@ -1,7 +1,7 @@
 import { Media, Property } from '../models/index.js';
 import { env } from '../config/env.js';
 import { cloudinary } from '../config/cloudinary.js';
-import { ensure } from '../utils/ApiError.js';
+import { ApiError, ensure } from '../utils/ApiError.js';
 function validateBytes(file) {
   const b = file.buffer;
   const jpeg = b.length > 3 && b[0] === 255 && b[1] === 216 && b[2] === 255;
@@ -32,18 +32,28 @@ export async function saveFiles(files, userId, { propertyId, private: privateFil
       name: file.originalname.replace(/[^\w. -]/g, '_').slice(0, 100),
     };
     if (env.MEDIA_MODE === 'cloudinary') {
-      const uploaded = await new Promise((resolve, reject) =>
-        cloudinary.uploader
-          .upload_stream(
-            {
-              resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
-              type: 'authenticated',
-              folder: 'estora',
-            },
-            (error, value) => (error ? reject(error) : resolve(value))
-          )
-          .end(file.buffer)
-      );
+      let uploaded;
+      try {
+        uploaded = await new Promise((resolve, reject) =>
+          cloudinary.uploader
+            .upload_stream(
+              {
+                resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
+                type: 'authenticated',
+                folder: 'estora',
+              },
+              (error, value) => (error ? reject(error) : resolve(value))
+            )
+            .end(file.buffer)
+        );
+      } catch (error) {
+        console.error('Cloudinary upload failed', error);
+        throw new ApiError(
+          502,
+          'MEDIA_UPLOAD_FAILED',
+          'Document upload service is unavailable. Please try again shortly.'
+        );
+      }
       record.cloudPublicId = uploaded.public_id;
       record.cloudResourceType = uploaded.resource_type;
     } else record.data = file.buffer;
@@ -83,7 +93,12 @@ export async function getFile(id, user) {
       secure: true,
     });
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    ensure(response.ok, 502, 'MEDIA_UNAVAILABLE');
+    ensure(
+      response.ok,
+      502,
+      'MEDIA_UNAVAILABLE',
+      'Document storage is temporarily unavailable. Please try again shortly.'
+    );
     file.data = Buffer.from(await response.arrayBuffer());
   }
   return file;

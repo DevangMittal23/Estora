@@ -37,7 +37,7 @@ export function errorHandler(error, _req, res, _next) {
   }
   if (status >= 500) {
     console.error(error);
-    message = 'Something went wrong. Please try again.';
+    if (!error.expose) message = 'Something went wrong. Please try again.';
   }
   res.status(status).json({ success: false, error: { code, message, details } });
 }
