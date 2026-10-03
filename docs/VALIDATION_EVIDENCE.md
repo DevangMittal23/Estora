@@ -6,8 +6,8 @@ This record distinguishes completed local verification from hosting-provider ver
 
 | Check | Evidence | Result |
 |---|---|---|
-| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 37 tests passed |
-| Client suite | Vitest and Testing Library | 59 tests passed |
+| Backend correctness and platform suites | Jest against a disposable MongoDB replica set, including 100-run financial/state properties | 40 tests passed |
+| Client suite | Vitest and Testing Library | 61 tests passed |
 | Static analysis | Server and client ESLint with zero warnings allowed | Passed |
 | Production client build | Vite build | Passed |
 | API audit | Public, role-scoped, invalid-input, permission, CORS and route checks against disposable API data | 63 checks passed |
@@ -17,6 +17,7 @@ This record distinguishes completed local verification from hosting-provider ver
 | Concurrent browser transactions | Both investor tabs complete labelled mock top-ups and purchases simultaneously, with exact separate wallet credits/debits and investor IDs | Passed |
 | Concurrent HTTP transactions | Eight investors purchase together; four wallets process concurrent duplicate payment confirmations; two purchases compete for one wallet balance | Passed |
 | Listing draft to approval | Separate broker/admin tabs: persist one gallery image and two documents, resume Media, explain missing images, accumulate two selections, submit and approve | Passed |
+| Saved property gallery | Save draft adds photos to the gallery; reload preserves them; Continue uses saved media; misplaced supporting photos move without reupload | Passed |
 
 ## Behavioural coverage represented by the suites
 
@@ -51,6 +52,16 @@ without a page reload and created an in-app alert. Admin approval made the listi
 and notified the broker. Screenshots: [Media validation](../artifacts/listing-media-validation.png),
 [ready for review](../artifacts/listing-ready-review.png), and
 [admin queue](../artifacts/listing-admin-queue.png). Only disposable data was changed.
+
+A follow-up browser check moved the two existing supporting photos into Property images
+using their original saved media IDs, then uploaded a fourth photo using Save draft.
+Reload retained all four named gallery previews on Media; Save & continue reached Review
+without another upload. Submission and admin approval were verified again. The upload
+field visibly states the three-image minimum. Screenshot:
+[gallery after Save draft](../artifacts/listing-gallery-after-save.png).
+API regressions cover concurrent repeated moves, file-type checks, property ownership,
+private-media rejection, gallery limits and locking after submission. No files are copied
+or reuploaded when moved; legal supporting images move only on an explicit action.
 
 ## Hosting verification still required
 

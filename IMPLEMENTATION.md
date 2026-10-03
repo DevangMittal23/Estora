@@ -27,7 +27,7 @@ The six supplied documents were reviewed. The final `docs/requirements.md` defin
 
 Client tests verify guards, validation, query states, unit/cap/terms gating, failed investment retry key reuse and stale sale-price preview blocking. The browser evaluation checks representative public/investor/broker/admin pages across desktop/tablet/mobile. This is focused verification, not a claim that every example test in the original task document exists verbatim.
 
-The current suites have 37 backend and 59 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. Multi-user HTTP regressions verify eight concurrent purchases, duplicate payment confirmations across four independent wallets and competing purchases against one wallet. Client regressions cover tab-specific tokens, reload persistence, stale profile/401 protection, query cancellation and purchase retry identity. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
+The current suites have 40 backend and 61 frontend tests. They include concurrent ownership-cap enforcement, expired reset tokens, nested-query rejection, cancellation rollback on a failed refund, local gallery/document asset routing, authenticated media retrieval, auth mode changes, enquiry/withdrawal pagination, focus handling and route scrolling. Backend regressions also cover accessible review-notification links, participant-scoped admin-owned listing enquiries and CLI administrator provisioning with login, data preservation, password protection and concurrent retries. Multi-user HTTP regressions verify eight concurrent purchases, duplicate payment confirmations across four independent wallets and competing purchases against one wallet. Client regressions cover tab-specific tokens, reload persistence, stale profile/401 protection, query cancellation and purchase retry identity. The MongoDB binary download runs before Jest so a first-time download cannot exhaust the suite's setup timeout.
 
 The commercial frontend refresh uses a navy/ivory/emerald palette, architectural concept imagery, a literal fractional ownership example and clear funding-to-sale explanations. Shared public, authentication and workspace layouts improve mobile navigation, forms, tables and empty states. Generated architecture is labelled illustrative; financial projections remain estimates and the demo status is explicit.
 
@@ -72,6 +72,14 @@ every 15 seconds while visible. A disposable browser walkthrough verified draft 
 three-image completion, submission in an already-open admin queue and approval to LIVE.
 Upload failures, resume-point retries, submission errors, concurrent submissions and
 notification rollback have regression coverage. Screenshots are in `artifacts/listing-*.png`.
+
+Save draft shows uploaded photos as named previews in Saved property images, on the same
+listing; the upload field states the minimum of three. A broker or admin can explicitly
+move a saved supporting photo into the gallery without reuploading it. The transactional
+service checks property ownership, draft/rejected status, stored MIME, media provenance
+and the 20-image limit. Repeated concurrent moves do not duplicate references. PDFs
+and private KYC cannot be moved through this route. Browser verification covers
+the move, saved gallery reload and Continue without another upload.
 
 Deployed administrators can be provisioned using `npm --prefix server run admin:create`
 and one-time `ADMIN_*` environment variables. The CLI validates registration fields,

@@ -1776,6 +1776,32 @@ tbody tr:hover {
   height: 80px;
   border-radius: 4px;
 }
+.property-photo {
+  margin: 0;
+  width: 140px;
+}
+.property-photo img {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+}
+.property-photo figcaption {
+  margin-top: 6px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.supporting-media-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.supporting-media-row .document-link {
+  flex: 1 1 240px;
+  width: auto;
+  margin-top: 0;
+}
 .threads {
   display: grid;
   gap: 20px;

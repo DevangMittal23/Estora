@@ -120,6 +120,93 @@ describe('saved listing wizard', () => {
     ],
   };
   const image = (name) => new File(['image'], name, { type: 'image/jpeg' });
+  it('Save draft adds selected photos to the saved property gallery and Continue advances without another upload', async () => {
+    const uploaded = {
+      ...mediaDraft,
+      images: [
+        ...mediaDraft.images,
+        { url: '/photo-2.jpg', name: 'second.jpg' },
+        { url: '/photo-3.jpg', name: 'third.jpg' },
+      ],
+    };
+    let saved = false;
+    send.mockImplementation(async (method, path) => {
+      if (path.endsWith('/media')) saved = true;
+      return { property: saved ? uploaded : mediaDraft };
+    });
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={mediaDraft} storageKey="test-draft" />);
+    expect(
+      screen.getByText('Property images — minimum 3 required')
+    ).toBeInTheDocument();
+    await user.upload(screen.getByLabelText('Property images'), [
+      image('second.jpg'),
+      image('third.jpg'),
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await screen.findByRole('heading', { name: 'Saved property images (3)' });
+    const gallery = screen.getByLabelText('Saved property images');
+    expect(within(gallery).getAllByRole('img')).toHaveLength(3);
+    expect(within(gallery).getByText('second.jpg')).toBeInTheDocument();
+    expect(screen.getByLabelText('Property images')).toBeInTheDocument();
+    const media = send.mock.calls.find(([, path]) =>
+      path.endsWith('/media')
+    )[2];
+    expect(media.getAll('images')).toHaveLength(2);
+    expect(media.getAll('documents')).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    await screen.findByText('Ready for a considered review.');
+    expect(
+      send.mock.calls.filter(([, path]) => path.endsWith('/media'))
+    ).toHaveLength(1);
+  });
+  it('moves saved supporting photos into the property gallery without reupload and clears obsolete missing-image errors', async () => {
+    const doc = {
+      publicId: '123456789012345678901234',
+      url: '/misplaced.jpg',
+      name: 'misplaced.jpg',
+    };
+    const initial = {
+      ...mediaDraft,
+      documents: [doc],
+      images: [mediaDraft.images[0], { url: '/image-2.jpg' }],
+    };
+    const moved = {
+      ...initial,
+      images: [...initial.images, doc],
+      documents: [],
+    };
+    send.mockImplementation(async (method, path) => ({
+      property: path.endsWith('/move-to-images') ? moved : initial,
+    }));
+    const user = userEvent.setup();
+    wrap(<WizardForm initial={initial} storageKey="test-draft" />);
+    await user.click(screen.getByRole('button', { name: 'Save & continue →' }));
+    await screen.findByRole('alert');
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Move misplaced.jpg to property images',
+      })
+    );
+    await screen.findByRole('heading', { name: 'Saved property images (3)' });
+    expect(
+      within(screen.getByLabelText('Saved property images')).getByRole('img', {
+        name: 'misplaced.jpg',
+      })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Move misplaced/ })
+    ).not.toBeInTheDocument();
+    expect(send).toHaveBeenLastCalledWith(
+      'post',
+      '/properties/property-1/media/move-to-images',
+      { mediaId: doc.publicId }
+    );
+    expect(send.mock.calls.some(([, path]) => path.endsWith('/media'))).toBe(
+      false
+    );
+  });
   it('accumulates image selections, allows removal, and saves all images before review', async () => {
     const uploaded = {
       ...mediaDraft,

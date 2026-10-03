@@ -74,6 +74,7 @@ export const investSchema = z.object({
 export const saleSchema = z.object({ salePrice: amount });
 export const rejectionSchema = z.object({ reason: z.string().trim().max(1000).optional() });
 export const statusSchema = z.object({ status: z.enum(['HOLDING', 'CANCELLED']) });
+export const movePropertyImageSchema = z.object({ mediaId: id }).strict();
 export const verifySchema = z.object({
   razorpayOrderId: text.max(200),
   razorpayPaymentId: text.max(200),

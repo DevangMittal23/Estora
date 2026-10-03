@@ -2,6 +2,7 @@ import { Media, Property } from '../models/index.js';
 import { env } from '../config/env.js';
 import { cloudinary } from '../config/cloudinary.js';
 import { ApiError, ensure } from '../utils/ApiError.js';
+import { transact } from './ledger.service.js';
 function validateBytes(file) {
   const b = file.buffer;
   const jpeg = b.length > 3 && b[0] === 255 && b[1] === 216 && b[2] === 255;
@@ -150,4 +151,45 @@ export async function addPropertyMedia(id, user, files) {
     'Property status changed during upload. Please try again'
   );
   return updated;
+}
+export async function moveToPropertyImages(id, user, mediaId) {
+  return transact(async (session) => {
+    const property = await Property.findById(id).session(session);
+    ensure(property, 404, 'NOT_FOUND');
+    ensure(
+      user.role === 'ADMIN' ||
+        (user.role === 'BROKER' && String(property.brokerId) === String(user._id)),
+      403,
+      'FORBIDDEN'
+    );
+    ensure(
+      ['DRAFT', 'REJECTED'].includes(property.status),
+      403,
+      'IMMUTABLE_FIELD',
+      'Supporting documents cannot move after submission'
+    );
+    const file = await Media.findOne({ _id: mediaId, propertyId: id, private: false })
+      .select('mime name')
+      .session(session);
+    ensure(
+      file && ['image/jpeg', 'image/png', 'image/webp'].includes(file.mime),
+      400,
+      'INVALID_FILE',
+      'Only an uploaded JPG, PNG or WebP belonging to this property can move to the gallery'
+    );
+    const document = property.documents.find((item) => item.publicId === mediaId);
+    const alreadyAdded = property.images.some((item) => item.publicId === mediaId);
+    ensure(document || alreadyAdded, 404, 'NOT_FOUND', 'Image is not attached to this listing');
+    if (!alreadyAdded) {
+      ensure(property.images.length < 20, 400, 'INVALID_FILE', 'Maximum 20 property images');
+      property.images.push({
+        url: `/api/v1/media/${mediaId}`,
+        publicId: mediaId,
+        name: file.name,
+      });
+    }
+    property.documents = property.documents.filter((item) => item.publicId !== mediaId);
+    await property.save({ session });
+    return property;
+  });
 }

@@ -12,6 +12,7 @@ import {
   rejectionSchema,
   statusSchema,
   saleSchema,
+  movePropertyImageSchema,
 } from '../validators/index.js';
 const router = Router(),
   owner = [authenticate, requireRole('BROKER', 'ADMIN'), requireOwnership],
@@ -40,6 +41,12 @@ router.post('/:id/status', ...admin, validate(statusSchema), c.status);
 router.get('/:id/payout-preview', ...admin, c.preview);
 router.post('/:id/sell', ...admin, validate(saleSchema), c.sell);
 router.get('/:id/investors', ...owner, c.investors);
+router.post(
+  '/:id/media/move-to-images',
+  ...owner,
+  validate(movePropertyImageSchema),
+  c.moveToImages
+);
 router.post(
   '/:id/media',
   ...owner,

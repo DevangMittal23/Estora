@@ -54,3 +54,10 @@ export const addMedia = endpoint(
   200,
   'Media uploaded'
 );
+export const moveToImages = endpoint(
+  async (r) => ({
+    property: await media.moveToPropertyImages(r.params.id, r.user, r.body.mediaId),
+  }),
+  200,
+  'Image added to property images'
+);

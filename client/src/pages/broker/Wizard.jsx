@@ -227,72 +227,86 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
     /* Preview until valid. */
   }
   const schemas = [basicsSchema, locationSchema, financialSchema];
-  const save = useAction(async ({ advance = false } = {}) => {
-    clearErrors();
-    const form = getValues();
-    let body;
-    if (step < 3) {
-      const result = schemas[step].safeParse(form);
-      if (!result.success) {
-        result.error.issues.forEach((issue) =>
-          setError(issue.path[0], { message: issue.message })
-        );
-        throw new Error('Please correct the highlighted fields.');
-      }
-      body = result.data;
-      if (
-        step === 1 &&
-        form.geo?.lat !== '' &&
-        form.geo?.lng !== '' &&
-        form.geo?.lat !== undefined
-      ) {
-        const lat = Number(form.geo.lat),
-          lng = Number(form.geo.lng);
+  const save = useAction(
+    async ({ advance = false } = {}) => {
+      clearErrors();
+      const form = getValues();
+      let body;
+      if (step < 3) {
+        const result = schemas[step].safeParse(form);
+        if (!result.success) {
+          result.error.issues.forEach((issue) =>
+            setError(issue.path[0], { message: issue.message })
+          );
+          throw new Error('Please correct the highlighted fields.');
+        }
+        body = result.data;
         if (
-          !Number.isFinite(lat) ||
-          !Number.isFinite(lng) ||
-          lat < -90 ||
-          lat > 90 ||
-          lng < -180 ||
-          lng > 180
-        )
-          throw new Error('Enter valid latitude and longitude.');
-        body.geo = { lat, lng };
+          step === 1 &&
+          form.geo?.lat !== '' &&
+          form.geo?.lng !== '' &&
+          form.geo?.lat !== undefined
+        ) {
+          const lat = Number(form.geo.lat),
+            lng = Number(form.geo.lng);
+          if (
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng) ||
+            lat < -90 ||
+            lat > 90 ||
+            lng < -180 ||
+            lng > 180
+          )
+            throw new Error('Enter valid latitude and longitude.');
+          body.geo = { lat, lng };
+        }
+        if (step === 2) body.valuation = toPaise(body.valuation);
+      } else body = {};
+      // Keep the resume point on Media until uploads and readiness checks finish.
+      body.savedStep = advance && step !== 3 ? Math.min(step + 1, 4) : step;
+      let nextId = id;
+      let p;
+      if (!nextId) {
+        p = (await send('post', '/properties/draft', body)).property;
+        nextId = p._id;
+        setId(nextId);
+        localStorage.setItem(storageKey, nextId);
+      } else p = (await send('patch', `/properties/${nextId}`, body)).property;
+      if (step === 3 && (images.length || documents.length)) {
+        const media = new FormData();
+        images.forEach((f) => media.append('images', f));
+        documents.forEach((f) => media.append('documents', f));
+        p = (await send('post', `/properties/${nextId}/media`, media)).property;
+        setImages([]);
+        setDocuments([]);
       }
-      if (step === 2) body.valuation = toPaise(body.valuation);
-    } else body = {};
-    // Keep the resume point on Media until uploads and readiness checks finish.
-    body.savedStep = advance && step !== 3 ? Math.min(step + 1, 4) : step;
-    let nextId = id;
-    let p;
-    if (!nextId) {
-      p = (await send('post', '/properties/draft', body)).property;
-      nextId = p._id;
-      setId(nextId);
-      localStorage.setItem(storageKey, nextId);
-    } else p = (await send('patch', `/properties/${nextId}`, body)).property;
-    if (step === 3 && (images.length || documents.length)) {
-      const media = new FormData();
-      images.forEach((f) => media.append('images', f));
-      documents.forEach((f) => media.append('documents', f));
-      p = (await send('post', `/properties/${nextId}/media`, media)).property;
-      setImages([]);
-      setDocuments([]);
-    }
-    setProperty(p);
-    if (step === 3 && advance) {
-      const missing = Math.max(0, 3 - (p.images?.length || 0));
-      if (missing)
-        throw new Error(
-          `Draft saved. Add ${missing} more property image${missing === 1 ? '' : 's'} under Property images before continuing. Supporting documents do not count.`
-        );
-      p = (await send('patch', `/properties/${nextId}`, { savedStep: 4 }))
-        .property;
       setProperty(p);
-    }
-    if (advance) setStep((s) => Math.min(s + 1, 4));
-    return p;
-  }, 'Draft saved');
+      if (step === 3 && advance) {
+        const missing = Math.max(0, 3 - (p.images?.length || 0));
+        if (missing)
+          throw new Error(
+            `Draft saved. Add ${missing} more property image${missing === 1 ? '' : 's'} under Property images before continuing. Supporting documents do not count.`
+          );
+        p = (await send('patch', `/properties/${nextId}`, { savedStep: 4 }))
+          .property;
+        setProperty(p);
+      }
+      if (advance) setStep((s) => Math.min(s + 1, 4));
+      return p;
+    },
+    step === 3 ? 'Property media saved' : 'Draft saved'
+  );
+  const moveImage = useAction(async (mediaId) => {
+    const result = await send(
+      'post',
+      `/properties/${id}/media/move-to-images`,
+      {
+        mediaId,
+      }
+    );
+    setProperty(result.property);
+    save.reset();
+  }, 'Image added to property images');
   const submit = useAction(async () => {
     await send('post', `/properties/${id}/submit`);
     localStorage.removeItem(storageKey);
@@ -523,15 +537,15 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
         {step === 3 && (
           <>
             <Field
-              label="Property images"
-              help="Add at least 3 images before submitting. JPG, PNG or WebP; 5 MB each."
+              label="Property images — minimum 3 required"
+              help="Save draft adds your selected photos to this property's gallery. Then use Save & continue for the next step. JPG, PNG or WebP; 5 MB each."
             >
               <input
                 type="file"
                 multiple
                 accept="image/jpeg,image/png,image/webp"
                 aria-label="Property images"
-                disabled={save.isPending}
+                disabled={save.isPending || moveImage.isPending}
                 onChange={(e) => upload(e, 'images')}
               />
             </Field>
@@ -547,15 +561,20 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
                   : 'Your property images are saved. Continue to review, then submit for approval.'}{' '}
               Supporting documents do not count toward the 3 property images.
             </p>
-            <div className="media-preview">
+            <h3>Saved property images ({property.images?.length || 0})</h3>
+            <div className="media-preview" aria-label="Saved property images">
               {property.images?.map((m) => (
-                <PropertyImage
-                  key={m.url}
-                  media={m}
-                  alt={m.name || 'Property image'}
-                />
+                <figure key={m.url} className="property-photo">
+                  <PropertyImage media={m} alt={m.name || 'Property image'} />
+                  <figcaption>{m.name || 'Property image'}</figcaption>
+                </figure>
               ))}
             </div>
+            {!property.images?.length && (
+              <p>
+                No property images saved yet. Choose at least 3 photos above.
+              </p>
+            )}
             <Field
               label="Supporting documents"
               help="Optional legal or supporting files. These do not count as gallery images. PDF, JPG, PNG or WebP; 5 MB each."
@@ -565,7 +584,7 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
                 multiple
                 accept="application/pdf,image/jpeg,image/png,image/webp"
                 aria-label="Supporting documents"
-                disabled={save.isPending}
+                disabled={save.isPending || moveImage.isPending}
                 onChange={(e) => upload(e, 'documents')}
               />
             </Field>
@@ -574,8 +593,33 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
               {documents.length} selected
             </p>
             {pendingFiles(documents, setDocuments, 'documents')}
+            {property.documents?.some(
+              (doc) =>
+                /^[a-f\d]{24}$/i.test(doc.publicId || '') &&
+                /\.(jpe?g|png|webp)$/i.test(doc.name || '')
+            ) && (
+              <p className="notice">
+                Saved a property photo here by mistake? Use Move to property
+                images below. It moves the existing file into the gallery
+                without uploading it again.
+              </p>
+            )}
             {property.documents?.map((doc) => (
-              <MediaLink key={doc.url} media={doc} />
+              <div key={doc.url} className="supporting-media-row">
+                <MediaLink media={doc} />
+                {/^[a-f\d]{24}$/i.test(doc.publicId || '') &&
+                  /\.(jpe?g|png|webp)$/i.test(doc.name || '') && (
+                    <Button
+                      variant="secondary"
+                      loading={moveImage.isPending}
+                      disabled={save.isPending}
+                      aria-label={`Move ${doc.name} to property images`}
+                      onClick={() => moveImage.mutate(doc.publicId)}
+                    >
+                      Move to property images
+                    </Button>
+                  )}
+              </div>
             ))}
             {fileError && <p className="danger">{fileError}</p>}
           </>
@@ -635,10 +679,20 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
             {errorMessage(submit.error)}
           </p>
         )}
+        {moveImage.isError && (
+          <p className="danger" role="alert">
+            {errorMessage(moveImage.error)}
+          </p>
+        )}
         <div className="wizard-actions">
           <Button
             variant="secondary"
-            disabled={step === 0 || save.isPending || submit.isPending}
+            disabled={
+              step === 0 ||
+              save.isPending ||
+              submit.isPending ||
+              moveImage.isPending
+            }
             onClick={() => setStep((s) => s - 1)}
           >
             Previous step
@@ -648,14 +702,14 @@ export function WizardForm({ initial = {}, storageKey, admin }) {
               <Button
                 variant="secondary"
                 loading={save.isPending}
-                disabled={!!fileError}
+                disabled={!!fileError || moveImage.isPending}
                 onClick={() => save.mutate({ advance: false })}
               >
                 Save draft
               </Button>
               <Button
                 loading={save.isPending}
-                disabled={!!fileError}
+                disabled={!!fileError || moveImage.isPending}
                 onClick={() => save.mutate({ advance: true })}
               >
                 Save & continue →

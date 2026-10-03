@@ -360,6 +360,125 @@ describe('HTTP authorization, validation and account workflows', () => {
       })
     ).toBe(0);
   });
+  test('saved supporting photos move into the gallery without reupload or duplicate concurrent moves', async () => {
+    const property = await newProperty({ status: 'DRAFT' });
+    await m.Property.updateOne({ _id: property._id }, { images: [property.images[0]] });
+    const path = `/properties/${property._id}`;
+    const jpeg = Buffer.from([255, 216, 255, 224, 0, 0]);
+    const upload = await api('post', `${path}/media`, 'broker')
+      .attach('documents', jpeg, { filename: 'misplaced-one.jpg', contentType: 'image/jpeg' })
+      .attach('documents', jpeg, { filename: 'misplaced-two.jpg', contentType: 'image/jpeg' });
+    expect(upload.status).toBe(200);
+    const documents = json(upload).property.documents;
+    const before = await m.Media.countDocuments({ propertyId: property._id });
+    const moved = await Promise.all([
+      api('post', `${path}/media/move-to-images`, 'broker').send({
+        mediaId: documents[0].publicId,
+      }),
+      api('post', `${path}/media/move-to-images`, 'broker').send({
+        mediaId: documents[0].publicId,
+      }),
+    ]);
+    expect(moved.map((result) => result.status)).toEqual([200, 200]);
+    let saved = await m.Property.findById(property._id);
+    expect(saved.images).toHaveLength(2);
+    expect(saved.documents).toHaveLength(1);
+    expect(
+      (
+        await api('post', `${path}/media/move-to-images`, 'broker').send({
+          mediaId: documents[1].publicId,
+        })
+      ).status
+    ).toBe(200);
+    saved = await m.Property.findById(property._id);
+    expect(saved.images).toHaveLength(3);
+    expect(saved.documents).toHaveLength(0);
+    expect(saved.images[2].url).toBe(documents[1].url);
+    expect(await m.Media.countDocuments({ propertyId: property._id })).toBe(before);
+    expect((await api('post', `${path}/submit`, 'broker')).status).toBe(200);
+    expect(
+      (
+        await api('post', `${path}/media/move-to-images`, 'broker').send({
+          mediaId: documents[0].publicId,
+        })
+      ).body.error.code
+    ).toBe('IMMUTABLE_FIELD');
+  });
+  test('moving a document checks file type, property ownership, private media and strict IDs', async () => {
+    const property = await newProperty({ status: 'DRAFT' });
+    const other = await newProperty({ status: 'DRAFT' });
+    const path = `/properties/${property._id}/media/move-to-images`;
+    const pdf = await m.Media.create({
+      userId: users.broker._id,
+      propertyId: property._id,
+      private: false,
+      mime: 'application/pdf',
+      name: 'legal.jpg',
+      data: Buffer.from('%PDF-1.4'),
+    });
+    const foreign = await m.Media.create({
+      userId: users.broker._id,
+      propertyId: other._id,
+      private: false,
+      mime: 'image/jpeg',
+      name: 'foreign.jpg',
+    });
+    const privateFile = await m.Media.create({
+      userId: users.investor._id,
+      private: true,
+      mime: 'image/jpeg',
+      name: 'kyc.jpg',
+    });
+    await m.Property.updateOne(
+      { _id: property._id },
+      {
+        documents: [
+          { publicId: String(pdf._id), url: `/api/v1/media/${pdf._id}`, name: 'legal.jpg' },
+        ],
+      }
+    );
+    for (const file of [pdf, foreign, privateFile])
+      expect(
+        (await api('post', path, 'broker').send({ mediaId: String(file._id) })).body.error.code
+      ).toBe('INVALID_FILE');
+    expect((await api('post', path).send({ mediaId: String(pdf._id) })).status).toBe(403);
+    await m.Property.updateOne({ _id: property._id }, { brokerId: users.admin._id });
+    expect((await api('post', path, 'broker').send({ mediaId: String(pdf._id) })).status).toBe(403);
+    expect((await api('post', path, 'admin').send({ mediaId: 'invalid' })).status).toBe(400);
+    expect(
+      (await api('post', path, 'admin').send({ mediaId: String(pdf._id), url: '/fake' })).status
+    ).toBe(400);
+    const saved = await m.Property.findById(property._id);
+    expect(saved.images).toHaveLength(3);
+    expect(saved.documents).toHaveLength(1);
+  });
+  test('moving a saved photo cannot exceed the 20-image gallery limit', async () => {
+    const property = await newProperty({ status: 'REJECTED' });
+    const file = await m.Media.create({
+      userId: users.broker._id,
+      propertyId: property._id,
+      private: false,
+      mime: 'image/jpeg',
+      name: 'photo.jpg',
+    });
+    await m.Property.updateOne(
+      { _id: property._id },
+      {
+        images: Array.from({ length: 20 }, (_, i) => ({ url: `/assets/photo-${i}.jpg` })),
+        documents: [{ publicId: String(file._id), url: `/api/v1/media/${file._id}` }],
+      }
+    );
+    const path = `/properties/${property._id}/media/move-to-images`;
+    expect(
+      (await api('post', path, 'broker').send({ mediaId: String(file._id) })).body.error.message
+    ).toBe('Maximum 20 property images');
+    expect((await m.Property.findById(property._id)).documents).toHaveLength(1);
+    await m.Property.updateOne({ _id: property._id }, { $pop: { images: 1 } });
+    expect((await api('post', path, 'broker').send({ mediaId: String(file._id) })).status).toBe(
+      200
+    );
+    expect((await m.Property.findById(property._id)).images).toHaveLength(20);
+  });
   test('property review notifications link to a page the listing owner can access', async () => {
     for (const role of ['admin', 'broker']) {
       for (const status of ['LIVE', 'REJECTED']) {

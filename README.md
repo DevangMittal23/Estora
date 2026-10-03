@@ -79,6 +79,12 @@ Supporting documents are saved separately and do not count toward the gallery mi
 even when they are JPG or PNG files. You can choose images one at a time; the selection
 list accumulates files and lets you remove a selection before saving.
 
+**Save draft** adds selected gallery photos directly to **Saved property images**, with
+their filenames and previews, and keeps you on Media. **Save & continue** then advances
+using those saved images. If a property photo was saved under Supporting documents,
+use its **Move to property images** button to reuse the saved file without reuploading.
+Legal documents remain supporting files unless you explicitly move an eligible image.
+
 **Save draft** keeps the listing private. **Save & continue** uploads the selected files
 and opens Review only once three property images are saved. On the final step, select
 **Submit for approval** to send the listing to the admin queue. Active administrators
