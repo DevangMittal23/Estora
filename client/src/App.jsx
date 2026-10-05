@@ -89,7 +89,7 @@ export default function App() {
                   <Route path="/broker/enquiries" element={<Enquiries />} />
                   <Route
                     path="/broker/transactions"
-                    element={<Ledger commissionOnly />}
+                    element={<Ledger commissionOnly standalone />}
                   />
                 </Route>
               </Route>
@@ -110,7 +110,10 @@ export default function App() {
                 <Route path="/admin/kyc" element={<KYCQueue />} />
                 <Route path="/admin/withdrawals" element={<Withdrawals />} />
                 <Route path="/admin/settings" element={<Settings />} />
-                <Route path="/admin/transactions" element={<Ledger />} />
+                <Route
+                  path="/admin/transactions"
+                  element={<Ledger standalone />}
+                />
               </Route>
             </Route>
           </Route>
@@ -118,7 +121,9 @@ export default function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            style: { background: '#0F2A4A', color: '#fff' },
+            style: { background: '#fffdf8', color: '#171717', borderRadius: 8 },
+            success: { iconTheme: { primary: '#238b6d', secondary: '#fffdf8' } },
+            error: { iconTheme: { primary: '#b94a48', secondary: '#fffdf8' } },
             duration: 4500,
           }}
         />

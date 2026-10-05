@@ -128,8 +128,16 @@ export function BrokerProperties() {
                     label: 'Funding',
                     render: (p) => <Progress value={p.fundingPct} />,
                   },
-                  { label: 'Investors', key: 'investorCount' },
-                  { label: 'Value', render: (p) => compactMoney(p.valuation) },
+                  {
+                    label: 'Investors',
+                    className: 'cell-quantity',
+                    key: 'investorCount',
+                  },
+                  {
+                    label: 'Value',
+                    className: 'cell-number',
+                    render: (p) => compactMoney(p.valuation),
+                  },
                   {
                     label: 'Actions',
                     render: (p) => (
@@ -227,13 +235,19 @@ export function BrokerAnalytics() {
                     keyField="investorId"
                     columns={[
                       { label: 'Investor', key: 'name' },
-                      { label: 'Units', key: 'units' },
+                      {
+                        label: 'Units',
+                        className: 'cell-quantity',
+                        key: 'units',
+                      },
                       {
                         label: 'Ownership',
+                        className: 'cell-quantity',
                         render: (i) => pct(i.ownershipPct),
                       },
                       {
                         label: 'Invested',
+                        className: 'cell-number',
                         render: (i) => money(i.investedAmount),
                       },
                       {

@@ -58,8 +58,11 @@ export function Logo() {
   const { user } = useAuth();
   return (
     <Link to={user ? homeFor(user) : '/'} className="logo">
-      <span className="logo-mark">E</span>ESTORA
-      <span className="logo-dot">.</span>
+      <span className="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 35V14L16 4L28 14V35M9 35V17L16 11L23 17V35M16 11V35M4 35H28" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
+        </svg>
+      </span>ESTORA
     </Link>
   );
 }
@@ -69,6 +72,9 @@ export function Footer() {
       <div className="footer-main">
         <div className="footer-brand">
           <Logo />
+          <span className="footer-brand-descriptor">
+            Premium Fractional Real Estate Investment Platform
+          </span>
           <p>
             Real estate ownership,
             <br />
@@ -109,6 +115,8 @@ export function PublicLayout() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const authPage = /^\/(login|signup|forgot-password|reset-password)(\/|$)/.test(location.pathname);
+  const landingPage = location.pathname === '/';
   const menuButton = useRef(null);
   useEffect(
     () => setOpen(false),
@@ -130,7 +138,7 @@ export function PublicLayout() {
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <nav className="public-nav" aria-label="Main navigation">
+      <nav className={`public-nav${authPage ? ' auth-nav' : landingPage ? ' landing-nav' : ''}`} aria-label="Main navigation">
         <Logo />
         <div
           id="public-navigation"
@@ -176,7 +184,11 @@ export function PublicLayout() {
           </button>
         </div>
       </nav>
-      <main id="main-content" tabIndex={-1}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={authPage ? 'auth-layout' : landingPage ? 'landing-layout' : undefined}
+      >
         <PageBack publicPage />
         <Outlet />
       </main>

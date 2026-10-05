@@ -140,9 +140,17 @@ export function SaleForm({ property: p }) {
             items={preview.items}
             columns={[
               { label: 'Investor', key: 'investorName' },
-              { label: 'Units', key: 'units' },
-              { label: 'Ownership', render: (i) => pct(i.ownershipPct) },
-              { label: 'Payout', render: (i) => money(i.payoutAmount) },
+              { label: 'Units', className: 'cell-quantity', key: 'units' },
+              {
+                label: 'Ownership',
+                className: 'cell-quantity',
+                render: (i) => pct(i.ownershipPct),
+              },
+              {
+                label: 'Payout',
+                className: 'cell-number',
+                render: (i) => money(i.payoutAmount),
+              },
             ]}
           />
           <div className={`notice ${preview.check ? 'success' : 'danger'}`}>

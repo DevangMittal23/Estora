@@ -16,7 +16,7 @@ import {
 } from '../../components/ui';
 import { TransactionTable } from './Portfolio';
 import { money, compactMoney, toPaise, date } from '../../utils';
-export function Ledger({ commissionOnly = false }) {
+export function Ledger({ commissionOnly = false, standalone = false }) {
   const [params, setParams] = useState({
     page: 1,
     limit: 15,
@@ -26,57 +26,78 @@ export function Ledger({ commissionOnly = false }) {
   const set = (key, value) =>
     setParams((p) => ({ ...p, [key]: value || undefined, page: 1 }));
   return (
-    <section className="panel">
-      <h2>{commissionOnly ? 'Commission history' : 'Transaction ledger'}</h2>
-      <div className="toolbar">
-        {!commissionOnly && (
-          <Field label="Transaction type">
-            <select
-              value={params.type || ''}
-              onChange={(e) => set('type', e.target.value)}
-            >
-              <option value="">All transactions</option>
-              {[
-                'TOPUP',
-                'INVESTMENT',
-                'PAYOUT',
-                'REFUND',
-                'COMMISSION',
-                'WITHDRAWAL',
-                'FEE',
-              ].map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-          </Field>
-        )}
-        <Field
-          label="From date"
-          type="date"
-          value={params.startDate || ''}
-          onChange={(e) => set('startDate', e.target.value)}
+    <>
+      {standalone && (
+        <Heading
+          eyebrow={
+            commissionOnly
+              ? 'Your earned commissions'
+              : 'The complete financial record'
+          }
+          title={commissionOnly ? 'Commission history' : 'All transactions'}
+          description={
+            commissionOnly
+              ? 'Track commissions credited to your wallet and review each entry.'
+              : 'Review recorded money movements across the platform.'
+          }
         />
-        <Field
-          label="To date"
-          type="date"
-          value={params.endDate || ''}
-          min={params.startDate || undefined}
-          onChange={(e) => set('endDate', e.target.value)}
-        />
-      </div>
-      <QueryState query={query}>
-        {(data) => (
-          <>
-            <TransactionTable items={data.items} />
-            <Pagination
-              data={data}
-              page={params.page}
-              onChange={(page) => setParams((p) => ({ ...p, page }))}
-            />
-          </>
+      )}
+      <section className="panel">
+        {!standalone && (
+          <h2>
+            {commissionOnly ? 'Commission history' : 'Transaction ledger'}
+          </h2>
         )}
-      </QueryState>
-    </section>
+        <div className="toolbar">
+          {!commissionOnly && (
+            <Field label="Transaction type">
+              <select
+                value={params.type || ''}
+                onChange={(e) => set('type', e.target.value)}
+              >
+                <option value="">All transactions</option>
+                {[
+                  'TOPUP',
+                  'INVESTMENT',
+                  'PAYOUT',
+                  'REFUND',
+                  'COMMISSION',
+                  'WITHDRAWAL',
+                  'FEE',
+                ].map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </Field>
+          )}
+          <Field
+            label="From date"
+            type="date"
+            value={params.startDate || ''}
+            onChange={(e) => set('startDate', e.target.value)}
+          />
+          <Field
+            label="To date"
+            type="date"
+            value={params.endDate || ''}
+            min={params.startDate || undefined}
+            onChange={(e) => set('endDate', e.target.value)}
+          />
+        </div>
+        <QueryState query={query}>
+          {(data) => (
+            <>
+              <TransactionTable items={data.items} />
+              <Pagination
+                data={data}
+                page={params.page}
+                onChange={(page) => setParams((p) => ({ ...p, page }))}
+              />
+            </>
+          )}
+        </QueryState>
+      </section>
+    </>
   );
 }
 const amountSchema = z.string().refine((v) => {
@@ -235,7 +256,9 @@ function MoneyForm({ mode, balance, onClose }) {
                 after admin approval. Use dummy bank details.
               </p>
               {balance <= 0 && (
-                <p className="small">Add funds before requesting a withdrawal.</p>
+                <p className="small">
+                  Add funds before requesting a withdrawal.
+                </p>
               )}
               <Field
                 label="Account holder name"
@@ -313,9 +336,19 @@ export function Wallet() {
             <>
               <Table
                 items={data.items}
+                emptyTitle="No withdrawal requests yet"
+                emptyDescription="Your withdrawal requests and their review status will appear here."
                 columns={[
-                  { label: 'Requested', render: (w) => date(w.createdAt) },
-                  { label: 'Amount', render: (w) => money(w.amount) },
+                  {
+                    label: 'Requested',
+                    className: 'cell-date',
+                    render: (w) => date(w.createdAt),
+                  },
+                  {
+                    label: 'Amount',
+                    className: 'cell-number',
+                    render: (w) => money(w.amount),
+                  },
                   {
                     label: 'Status',
                     render: (w) => <Chip status={w.status} />,

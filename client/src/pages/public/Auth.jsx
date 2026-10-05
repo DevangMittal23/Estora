@@ -111,8 +111,8 @@ function AuthForm({ mode }) {
           Shared possibilities.
         </h2>
         <img
-          src="/assets/estora-residences.webp"
-          alt="Illustrative contemporary residences"
+          src="/assets/estora-auth-estate.webp"
+          alt="Illustrative contemporary Indian estate with stone-and-glass towers and a landscaped entrance"
         />
         <small className="auth-image-label">
           Concept architecture · Illustrative

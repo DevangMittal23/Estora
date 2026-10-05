@@ -136,7 +136,7 @@ export function Heading({
 }
 export function Kpis({ items }) {
   return (
-    <div className="kpis">
+    <div className={`kpis kpis-${items.length}`}>
       {items.map(([caption, value, detail]) => (
         <article key={caption} className="kpi">
           <span>{caption}</span>
@@ -209,6 +209,7 @@ export function Table({
   items = [],
   keyField = '_id',
   emptyTitle = 'No records found',
+  emptyDescription,
 }) {
   const tableRef = useRef(null);
   const [overflow, setOverflow] = useState(false);
@@ -228,7 +229,8 @@ export function Table({
       observer?.disconnect();
     };
   }, [items.length]);
-  if (!items.length) return <Empty title={emptyTitle} />;
+  if (!items.length)
+    return <Empty title={emptyTitle} description={emptyDescription} />;
   return (
     <>
       {overflow && (
@@ -247,7 +249,9 @@ export function Table({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.label}>{col.label}</th>
+                <th key={col.label} className={col.className}>
+                  {col.label}
+                </th>
               ))}
             </tr>
           </thead>
@@ -255,7 +259,7 @@ export function Table({
             {items.map((item, index) => (
               <tr key={item[keyField] || index}>
                 {columns.map((col) => (
-                  <td key={col.label}>
+                  <td key={col.label} className={col.className}>
                     {col.render ? col.render(item) : (item[col.key] ?? '—')}
                   </td>
                 ))}
@@ -499,13 +503,21 @@ export function PropertyCard({ property: p }) {
   );
 }
 const colors = [
-  '#0F2A4A',
-  '#10B981',
-  '#D4A017',
-  '#6688A0',
-  '#ABC5B7',
-  '#966DC1',
+  '#073b35',
+  '#b8893d',
+  '#738d76',
+  '#a37349',
+  '#ab9b71',
+  '#4f7d70',
 ];
+const chartTooltipStyle = {
+  background: '#fffdf8',
+  border: '1px solid #ddd3c4',
+  borderRadius: 8,
+  color: '#171717',
+  fontSize: 13,
+  boxShadow: '0 8px 24px #0b292615',
+};
 export function Allocation({ items = [] }) {
   if (!items.length)
     return (
@@ -531,6 +543,8 @@ export function Allocation({ items = [] }) {
               innerRadius={72}
               outerRadius={105}
               paddingAngle={3}
+              stroke="#fffdf8"
+              isAnimationActive={false}
             >
               {items.map((p, i) => (
                 <Cell
@@ -539,7 +553,10 @@ export function Allocation({ items = [] }) {
                 />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => money(value)} />
+            <Tooltip
+              contentStyle={chartTooltipStyle}
+              formatter={(value) => money(value)}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -580,34 +597,76 @@ export function DataChart({
   const Chart = bar ? BarChart : LineChart;
   return (
     <div className="chart">
-      <ResponsiveContainer width="100%" height={280}>
-        <Chart data={data}>
+      <ResponsiveContainer
+        width="100%"
+        height={bar ? Math.max(280, data.length * 38) : 280}
+      >
+        <Chart
+          data={data}
+          layout={bar ? 'vertical' : 'horizontal'}
+          margin={{ top: 12, right: 18, bottom: 8, left: 0 }}
+        >
           <CartesianGrid
             strokeDasharray="3 3"
-            vertical={false}
-            stroke="#e9edf0"
+            vertical={bar}
+            horizontal={!bar}
+            stroke="#ddd3c4"
           />
-          <XAxis dataKey={x} fontSize={11} tickLine={false} axisLine={false} />
+          <XAxis
+            dataKey={bar ? undefined : x}
+            type={bar ? 'number' : 'category'}
+            allowDecimals={!bar}
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            minTickGap={28}
+          />
           <YAxis
-            tickFormatter={(v) => (moneyValues ? compactMoney(v) : v)}
-            fontSize={11}
+            dataKey={bar ? x : undefined}
+            type={bar ? 'category' : 'number'}
+            tickFormatter={(v) =>
+              bar ? label(v) : moneyValues ? compactMoney(v) : v
+            }
+            width={bar ? 112 : 88}
+            interval={bar ? 0 : 'preserveStartEnd'}
+            fontSize={12}
             tickLine={false}
             axisLine={false}
           />
-          <Tooltip formatter={(v) => (moneyValues ? money(v) : v)} />
+          <Tooltip
+            contentStyle={chartTooltipStyle}
+            labelFormatter={(v) => (bar ? label(v) : v)}
+            formatter={(v) => [moneyValues ? money(v) : v, label(y)]}
+            cursor={bar ? { fill: '#102b3e08' } : { stroke: '#b8893d' }}
+          />
           {bar ? (
-            <Bar dataKey={y} fill="#0F2A4A" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey={y}
+              fill="#073b35"
+              radius={[0, 3, 3, 0]}
+              barSize={17}
+              isAnimationActive={false}
+            />
           ) : (
             <Line
               type="monotone"
               dataKey={y}
-              stroke="#10B981"
-              strokeWidth={3}
-              dot={false}
+              stroke="#073b35"
+              strokeWidth={2.5}
+              dot={
+                data.length === 1
+                  ? { r: 4, fill: '#073b35', stroke: '#fffdf8', strokeWidth: 2 }
+                  : false
+              }
+              activeDot={{ r: 5, stroke: '#fffdf8', strokeWidth: 2 }}
+              isAnimationActive={false}
             />
           )}
         </Chart>
       </ResponsiveContainer>
+      {!bar && data.length === 1 && (
+        <p className="chart-caption">One recorded period so far.</p>
+      )}
     </div>
   );
 }

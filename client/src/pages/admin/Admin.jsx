@@ -57,7 +57,7 @@ export function AdminDashboard() {
               ]}
             />
             <section className="panel">
-              <div className="between">
+              <div className="between approval-heading">
                 <h2>Decisions awaiting you</h2>
                 <span className="eyebrow">Approval queues</span>
               </div>
@@ -203,6 +203,7 @@ export function AdminProperties() {
                 columns={[
                   {
                     label: 'Property',
+                    className: 'cell-property',
                     render: (p) => (
                       <Link className="table-link" to={`/properties/${p._id}`}>
                         {p.title}
@@ -222,11 +223,17 @@ export function AdminProperties() {
                   },
                   {
                     label: 'Valuation',
+                    className: 'cell-number',
                     render: (p) => compactMoney(p.valuation),
                   },
-                  { label: 'Funded', render: (p) => pct(p.fundingPct) },
+                  {
+                    label: 'Funded',
+                    className: 'cell-quantity',
+                    render: (p) => pct(p.fundingPct),
+                  },
                   {
                     label: 'Actions',
+                    className: 'cell-actions',
                     render: (p) => (
                       <div className="actions wrap">
                         {p.status === 'PENDING_APPROVAL' && (
@@ -529,6 +536,7 @@ export function KYCQueue() {
                 columns={[
                   {
                     label: 'Investor',
+                    className: 'cell-identity',
                     render: (u) => (
                       <>
                         <strong>{u.name}</strong>
@@ -633,13 +641,23 @@ export function Withdrawals() {
             <>
               <Table
                 items={data.items}
+                emptyTitle="No withdrawals awaiting review"
+                emptyDescription="New pending requests will appear here when investors request a withdrawal."
                 columns={[
-                  { label: 'Requested', render: (w) => date(w.createdAt) },
+                  {
+                    label: 'Requested',
+                    className: 'cell-date',
+                    render: (w) => date(w.createdAt),
+                  },
                   {
                     label: 'Investor',
                     render: (w) => w.userId?.name || idOf(w.userId),
                   },
-                  { label: 'Amount', render: (w) => money(w.amount) },
+                  {
+                    label: 'Amount',
+                    className: 'cell-number',
+                    render: (w) => money(w.amount),
+                  },
                   {
                     label: 'Bank details',
                     render: (w) => (

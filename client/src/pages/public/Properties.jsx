@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Layers3,
   Landmark,
+  Banknote,
 } from 'lucide-react';
 import { useData, send, useAction } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -44,7 +45,7 @@ export function Landing() {
           <h1>
             Own a share.
             <br />
-            <em>See the bigger</em>
+            <em>See the bigger</em>{' '}
             <br />
             <em>picture.</em>
           </h1>
@@ -78,6 +79,15 @@ export function Landing() {
             alt="Illustrative contemporary residences with limestone balconies and landscaped gardens"
             fetchpriority="high"
           />
+          <div className="hero-collection-label" aria-hidden="true">
+            <span>THE ESTORA PERSPECTIVE</span>
+            <span>01 / REAL ESTATE, REIMAGINED</span>
+          </div>
+
+          <span className="hero-vertical">
+            A DIFFERENT WAY INTO REAL ESTATE
+          </span>
+        </div>
           <div className="hero-art-caption">
             <span>THE OWNERSHIP IDEA</span>
             <strong>One property. Many owners.</strong>
@@ -86,10 +96,6 @@ export function Landing() {
             </p>
             <small>Illustrative example · Concept architecture</small>
           </div>
-          <span className="hero-vertical">
-            A DIFFERENT WAY INTO REAL ESTATE
-          </span>
-        </div>
       </section>
       <section className="landing-stats">
         <QueryState query={stats}>
@@ -114,6 +120,53 @@ export function Landing() {
             </>
           )}
         </QueryState>
+      </section>
+      <section id="how-it-works" className="how-section">
+        <div>
+          <span className="eyebrow">How ESTORA works</span>
+          <h2>
+            From your first unit
+            <br />
+            to the final sale.
+          </h2>
+          <p>
+            Know what you own, where your funds go, and how your share is
+            returned.
+          </p>
+        </div>
+        <ol>
+          {[
+            [
+              'Explore & understand',
+              'Compare properties, read supporting documents and consider the expected holding period.',
+              Landmark,
+            ],
+            [
+              'Verify & fund',
+              'Complete identity verification with dummy documents, then add test funds to your wallet.',
+              ShieldCheck,
+            ],
+            [
+              'Own your share',
+              'Buy units while funding is open. Track your ownership and property milestones in your portfolio.',
+              Layers3,
+            ],
+            [
+              'Receive your share at sale',
+              'When the property is sold, net proceeds are allocated by ownership and credited to your wallet.',
+              Banknote,
+            ],
+          ].map(([title, description, Icon], i) => (
+            <li key={title}>
+              <span>0{i + 1}</span>
+              <Icon className="journey-icon" aria-hidden="true" />
+              <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
       <section className="public-section featured-section">
         <Heading
@@ -166,6 +219,17 @@ export function Landing() {
         </div>
         <div className="ownership-example">
           <span className="example-label">AN ILLUSTRATIVE EXAMPLE</span>
+          <div className="ownership-visual" aria-hidden="true">
+            <div className="ownership-unit-grid">
+              {Array.from({ length: 100 }, (_, index) => (
+                <i key={index} className={index === 0 ? 'owned' : ''} />
+              ))}
+            </div>
+            <div className="ownership-visual-caption">
+              <strong>1%</strong>
+              <span>Your part of a bigger picture.</span>
+            </div>
+          </div>
           <div className="ownership-math">
             <div>
               <small>Property value</small>
@@ -198,48 +262,7 @@ export function Landing() {
           </small>
         </div>
       </section>
-      <section id="how-it-works" className="how-section">
-        <div>
-          <span className="eyebrow">How ESTORA works</span>
-          <h2>
-            From your first unit
-            <br />
-            to the final sale.
-          </h2>
-          <p>
-            Know what you own, where your funds go, and how your share is
-            returned.
-          </p>
-        </div>
-        <ol>
-          {[
-            [
-              'Explore & understand',
-              'Compare properties, read supporting documents and consider the expected holding period.',
-            ],
-            [
-              'Verify & fund',
-              'Complete identity verification with dummy documents, then add test funds to your wallet.',
-            ],
-            [
-              'Own your share',
-              'Buy units while funding is open. Track your ownership and property milestones in your portfolio.',
-            ],
-            [
-              'Receive your share at sale',
-              'When the property is sold, net proceeds are allocated by ownership and credited to your wallet.',
-            ],
-          ].map(([title, description], i) => (
-            <li key={title}>
-              <span>0{i + 1}</span>
-              <div>
-                <h3>{title}</h3>
-                <p>{description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+
       <section className="transparency-section public-section">
         <div>
           <Landmark size={28} />
@@ -338,7 +361,7 @@ export function Marketplace() {
     <section className="public-section marketplace">
       <Heading
         eyebrow="The marketplace"
-        title="Find a property. Make it part of your portfolio."
+        title="Investment opportunities."
         description="Explore fractional ownership opportunities. Compare the cost of entry, review the documents and choose the units that fit your plans."
       />
       <div className="market-layout">
@@ -659,13 +682,21 @@ export function PropertyDetail() {
                     />
                   )}
                 </section>
-                <section className="panel">
+                <section className="panel location-panel">
                   <h2>
                     <MapPin size={21} /> Location
                   </h2>
                   <p>
                     {p.address}, {p.city}
                   </p>
+                  <div className="map-help">
+                    <MapPin size={18} aria-hidden="true" />
+                    <p>
+                      <strong>Google Maps preview</strong>
+                      The map may be unavailable here. Open the full location
+                      below if needed.
+                    </p>
+                  </div>
                   <iframe
                     title="Property location"
                     loading="lazy"

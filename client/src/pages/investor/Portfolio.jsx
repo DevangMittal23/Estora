@@ -19,19 +19,14 @@ export function TransactionTable({ items }) {
     <Table
       items={items}
       columns={[
-        { label: 'Date', render: (t) => date(t.createdAt) },
         {
-          label: 'Transaction',
-          render: (t) => (
-            <>
-              <Chip status={t.type} />
-              <small className="table-subtitle">{t._id}</small>
-            </>
-          ),
+          label: 'Date',
+          className: 'cell-date',
+          render: (t) => date(t.createdAt),
         },
-        { label: 'Direction', key: 'direction' },
         {
           label: 'Amount',
+          className: 'cell-number',
           render: (t) => (
             <strong
               className={t.direction === 'CREDIT' ? 'positive' : 'number'}
@@ -41,7 +36,17 @@ export function TransactionTable({ items }) {
             </strong>
           ),
         },
-        { label: 'Balance after', render: (t) => money(t.balanceAfter) },
+        {
+          label: 'Transaction',
+          render: (t) => <Chip status={t.type} />,
+        },
+        { label: 'Direction', key: 'direction' },
+        {
+          label: 'Balance after',
+          className: 'cell-number',
+          render: (t) => money(t.balanceAfter),
+        },
+        { label: 'Reference', className: 'cell-reference', key: '_id' },
       ]}
     />
   );
@@ -192,6 +197,7 @@ export function Portfolio() {
                 ]}
               />
               <section className="panel">
+                <h2>Your property allocation</h2>
                 <Allocation items={s.allocations} />
               </section>
               <section className="panel">
@@ -259,22 +265,34 @@ export function Portfolio() {
                       label: 'Property status',
                       render: (p) => <Chip status={p.status} />,
                     },
-                    { label: 'Units', key: 'units' },
-                    { label: 'Ownership', render: (p) => pct(p.ownershipPct) },
+                    {
+                      label: 'Units',
+                      className: 'cell-quantity',
+                      key: 'units',
+                    },
+                    {
+                      label: 'Ownership',
+                      className: 'cell-quantity',
+                      render: (p) => pct(p.ownershipPct),
+                    },
                     {
                       label: 'Invested',
+                      className: 'cell-number',
                       render: (p) => money(p.investedAmount),
                     },
                     {
                       label: 'Est. value',
+                      className: 'cell-number',
                       render: (p) => money(p.estimatedValue),
                     },
                     {
                       label: 'Payout received',
+                      className: 'cell-number',
                       render: (p) => money(p.payoutReceived),
                     },
                     {
                       label: 'Realised ROI',
+                      className: 'cell-quantity',
                       render: (p) =>
                         p.payoutReceived ? (
                           <strong
