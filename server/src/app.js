@@ -14,6 +14,7 @@ import investments from './routes/investment.routes.js';
 import wallet from './routes/wallet.routes.js';
 import admin from './routes/admin.routes.js';
 import shared from './routes/shared.routes.js';
+import seo from './routes/seo.routes.js';
 import { z } from 'zod';
 const app = express();
 app.disable('x-powered-by');
@@ -49,6 +50,7 @@ app.get('/ready', (_req, res) =>
     .json({ status: mongoose.connection.readyState === 1 ? 'ready' : 'unavailable' })
 );
 app.use('/api/v1', apiLimiter);
+app.use('/api/v1/seo', seo);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/properties', properties);
 app.use('/api/v1/investments', investments);

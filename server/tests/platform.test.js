@@ -100,6 +100,35 @@ afterAll(async () => {
   await mongoose.disconnect();
   if (repl) await repl.stop();
 });
+describe('Public SEO property projection', () => {
+  test('only published records are public, even when an administrator supplies a token', async () => {
+    const live = await newProperty({ status: 'LIVE' });
+    const funded = await newProperty({ status: 'FUNDED' });
+    const hidden = [];
+    for (const status of ['DRAFT', 'REJECTED', 'PENDING_APPROVAL', 'HOLDING', 'SOLD', 'CANCELLED']) hidden.push(await newProperty({ status }));
+    await m.Property.updateOne({ _id: live._id }, { $set: {
+      brokerId: users.broker._id,
+      approvedBy: users.admin._id,
+      rejectionReason: 'Confidential review notes',
+      savedStep: 3,
+      documents: [{ url: '/private-document', name: 'Confidential document' }],
+    } });
+    const listed = await api('get', '/seo/properties?limit=100', 'admin').expect(200);
+    const ids = json(listed).items.map((item) => item._id);
+    expect(ids).toContain(String(live._id));
+    expect(ids).toContain(String(funded._id));
+    for (const property of hidden) expect(ids).not.toContain(String(property._id));
+    const detail = await request(app).get(`/api/v1/seo/properties/${live._id}`).expect(200);
+    for (const field of ['brokerId', 'approvedBy', 'rejectionReason', 'savedStep', 'documents', 'investors', 'walletBalance']) expect(json(detail)).not.toHaveProperty(field);
+    expect(detail.headers['x-robots-tag']).toBe('noindex');
+    for (const property of hidden) await request(app).get(`/api/v1/seo/properties/${property._id}`).expect(404);
+    await request(app).get('/api/v1/seo/properties/not-an-id').expect(404);
+    const city = await request(app).get('/api/v1/seo/properties?city=Pune').expect(200);
+    expect(json(city).items.every((item) => item.city === 'Pune')).toBe(true);
+    expect(await m.Property.findById(live._id).then((item) => item.rejectionReason)).toBe('Confidential review notes');
+  });
+});
+
 describe('Deployed admin provisioning', () => {
   const credentials = {
     name: 'Deployment admin',
