@@ -83,7 +83,7 @@ components:
 
 ## Overview
 
-The visual reference is a luxury Indian property brochure paired with a private-wealth portal. The user confirmed forest green and ivory while retaining “Own a share. See the bigger picture.” on 2026-10-04. This is the local review candidate, not authorization to publish it.
+The visual reference is a luxury Indian property brochure paired with a private-wealth portal. The user confirmed forest green and ivory while retaining “Own a share. See the bigger picture.” on 2026-10-04. The reviewed public-feature and landing-resource additions were approved for publication to GitHub on 2026-10-08.
 
 Public discovery and authentication use editorial composition and architectural imagery. Investor, broker and administrator routes prioritize readable financial data and familiar controls. The audience is English-speaking users exploring Indian property investment; rupee amounts and dates follow the existing en-IN formatters. This is an academic demonstration with test funds and dummy identity documents.
 
@@ -95,7 +95,7 @@ Token ownership is Model B: client/src/premium.css is the canonical runtime desi
 
 A lighter near-white ivory (#FBF9F5), soft sand (#F5F0E8), warm white surfaces (#FFFEFB) and pale borders (#E7E1D7) unify public pages and every authenticated workspace. The landing hero uses a more transparent ivory wash so the architecture remains visible through the left and middle, with a restrained top wash for navigation readability. Forest and emerald belong to navigation, primary actions, selected focal strips and the footer. Champagne gold highlights featured content and important information sparingly. Smaller gold text and semantic labels may use darker derived shades to preserve contrast. Status text and icons accompany colors.
 
-Runtime mapping: palette entries map to semantic CSS variables in premium.css; index.css base variables mirror the same roles. Shared chart palette, tooltip and toast styling are visual adapters in components/ui.jsx and App.jsx. Charts use a restrained forest/bronze/gold palette, legible axes and honest annotations. This is one fixed light theme with dark brand surfaces, without a theme-switching feature.
+Runtime mapping: palette entries map to semantic CSS variables in premium.css; index.css base variables mirror the same roles. Shared chart palette, tooltip and toast styling are visual adapters in components/charts.jsx and App.jsx. Charts use a restrained forest/bronze/gold palette, legible axes and honest annotations. This is one fixed light theme with dark brand surfaces, without a theme-switching feature.
 
 ## Typography
 
@@ -161,6 +161,18 @@ Use existing Lucide architectural/financial line icons with text labels. Allow b
 Use actual API data. Do not invent rental distribution, grade/RERA certifications, bank security claims, starting-price floors, upcoming payouts, approval guarantees or investment performance. Retain academic, test-payment, dummy-document and estimated-projection disclosures. Generated architecture is conceptual; actual uploaded property and private KYC media retain their identity and access rules.
 
 ## Do's and Don'ts
+
+### Public education and discovery additions — 2026-10-08
+
+The landing page introduces the existing free ROI calculator, rental yield calculator and ownership guide between featured properties and the ownership explanation. A dedicated ivory editorial strip uses three numbered columns with fine dividers, direct action links and visible “Free · No account required” copy. Mobile stacks the entries, preserving usable link targets and the current section rhythm. Styling stays scoped to `.free-resources-section` in `client/src/seo-pages.css`.
+
+The fractional ownership guide, Insights publication, location introduction and calculators reuse the existing forest/ivory/champagne identity. Scoped client/src/seo-pages.css consumes runtime tokens; it does not replace existing marketing, auth or workspace styling. Editorial columns, numbered explanations, descriptive links and restrained comparison tables replace repeated decorative cards. Article imagery remains explicitly illustrative. Location cards use published API properties only; an empty city catalogue explains that no opportunities are currently published without inventing listings or market statistics.
+
+Public pages use a visible breadcrumb and one primary H1. FAQ disclosures use native details/summary. Calculator fields have visible labels, decimal input modes, associated validation, a deliberate submit action, a reset action and a polite live result region. Blank fields are not investment projections. Zero proceeds/rent and negative results are valid; results explain the formula and limitations. No calculator login is required. Reading, browsing and calculation preserve the authenticated workspace for existing sessions, while investment/enquiry account requirements remain unchanged.
+
+Server-rendered public content and its initial client snapshot must match during hydration. Public SEO output contains only the explicit published-property projection, never private documents, account data or credentials. Current API permissions determine interactive document access. Role/account pages keep their existing application renderer and noindex metadata. Chart modules are loaded on demand without changing their data or behavior.
+
+QA covers 360, 390, 768, 1024, 1440 and 1920px, including readable mobile calculator results, no page overflow, consistent public navigation, article reading hierarchy and the existing workspace when logged in. The user authorized committing and pushing these reviewed changes on 2026-10-08.
 
 - Do use the shared token and component owners for every role and state.
 - Do prioritize clear figures, readable forms and thoughtful mobile composition.
