@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
+import { resolve, relative, isAbsolute } from 'node:path';
 
 // Assets/HMR still belong to Vite; application/auth APIs stay on Render.
 export function seoDevelopment({ apiOrigin, origin }) {
@@ -7,8 +8,15 @@ export function seoDevelopment({ apiOrigin, origin }) {
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const path = new URL(req.url, 'http://localhost').pathname;
-        if (path.startsWith('/@') || path.startsWith('/src/') || path.startsWith('/node_modules/') || path.startsWith('/assets/') || path === '/favicon.svg' || path === '/architecture.svg' || (/\.[a-z\d]+$/i.test(path) && !['/robots.txt', '/sitemap.xml', '/index.html'].includes(path))) return next();
+        const path = new URL(`http://localhost${req.url}`).pathname;
+        if (path.startsWith('/@') || path.startsWith('/src/') || path.startsWith('/node_modules/') || path.startsWith('/assets/')) return next();
+        if (/\.[a-z\d]+$/i.test(path) && !['/robots.txt', '/sitemap.xml', '/index.html'].includes(path)) {
+          try {
+            const file = resolve(server.config.publicDir, `.${decodeURIComponent(path)}`);
+            const withinPublic = relative(server.config.publicDir, file);
+            if (!withinPublic.startsWith('..') && !isAbsolute(withinPublic) && (await stat(file)).isFile()) return next();
+          } catch { /* Missing file-like URLs must receive the document 404. */ }
+        }
         if (!['GET', 'HEAD'].includes(req.method)) return next();
         try {
           const entry = await server.ssrLoadModule('/src/entry-server.jsx');

@@ -169,6 +169,10 @@ export function FractionalGuide() {
           <img
             src="/assets/estora-residences.webp"
             alt="Illustrative contemporary residences with landscaped gardens"
+            width={1672}
+            height={941}
+            loading="eager"
+            decoding="async"
           />
           <figcaption>Concept architecture · Illustrative imagery</figcaption>
         </figure>
@@ -522,6 +526,10 @@ export function AboutPage() {
           <img
             src="/assets/estora-residences.webp"
             alt="Illustrative residential architecture and landscaped courtyard"
+            width={1672}
+            height={941}
+            loading="eager"
+            decoding="async"
           />
           <figcaption>Concept architecture · Illustrative imagery</figcaption>
         </figure>
@@ -598,6 +606,10 @@ export function Insights() {
               <img
                 src={lead.heroImage}
                 alt="Illustrative contemporary residences"
+                width={1672}
+                height={941}
+                loading="eager"
+                decoding="async"
               />
               <span>Concept architecture · Illustrative imagery</span>
             </Link>
@@ -701,6 +713,10 @@ export function InsightArticle() {
         <img
           src={article.heroImage}
           alt="Illustrative residential architecture"
+          width={1672}
+          height={941}
+          loading="eager"
+          decoding="async"
         />
         <figcaption>Concept architecture · Illustrative imagery</figcaption>
       </figure>
@@ -874,6 +890,9 @@ export function CalculatorPage() {
           inputs, not actual or guaranteed future returns. ESTORA uses test
           funds and does not distribute rental income.
         </Notice>
+        <Link className="text-link" to="/properties">
+          Compare published property listings <ArrowRight size={16} />
+        </Link>
       </section>
     </Page>
   );

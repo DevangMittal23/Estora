@@ -383,7 +383,7 @@ export function PropertyImage({
     <img
       className={className}
       src={url}
-      alt={media?.url ? alt : 'Illustrative architecture; no property image supplied'}
+      alt={url === '/architecture.svg' ? 'Illustrative architecture; no property image available' : alt}
       width={1200}
       height={800}
       loading={loading}

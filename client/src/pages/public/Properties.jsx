@@ -470,6 +470,7 @@ export function Marketplace() {
           />
           <Field label="Property type">
             <select
+              aria-label="Property type"
               value={filters.type || ''}
               onChange={(e) => update('type', e.target.value)}
             >
@@ -483,6 +484,7 @@ export function Marketplace() {
           </Field>
           <Field label="Status">
             <select
+              aria-label="Status"
               value={filters.status || ''}
               onChange={(e) => update('status', e.target.value)}
             >

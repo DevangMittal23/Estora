@@ -26,6 +26,8 @@ export default async function handler(req, res) {
     res.statusCode = 503;
     res.setHeader('X-Robots-Tag', 'noindex');
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Retry-After', '60');
     res.end('Public information temporarily unavailable.');
   }
 }

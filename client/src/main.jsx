@@ -16,18 +16,19 @@ let publicState;
 try {
   publicState = JSON.parse(document.getElementById('estora-public-state')?.textContent || 'null');
 } catch { /* Static SPA deployments have no server-rendered state. */ }
+if (publicState) window.__ESTORA_PUBLIC__ = publicState;
 if (publicState?.pathname === window.location.pathname) {
-  window.__ESTORA_PUBLIC__ = publicState;
   if (!getToken()) for (const entry of publicState.entries || [])
     queryClient.setQueryData([entry.path, entry.params, null], entry.data);
 }
 function PublicRefresh() {
   React.useEffect(() => {
-    if (!publicState?.entries?.length || getToken()) return;
+    const details = publicState?.entries?.filter((entry) => /^\/properties\/[a-f\d]{24}$/i.test(entry.path)) || [];
+    if (!details.length || getToken()) return;
     // Complete hydration using the same safe snapshot before requesting the
     // interactive API representation (including permission-checked documents).
     const timer = window.setTimeout(() => {
-      if (!getToken()) queryClient.invalidateQueries();
+      if (!getToken()) for (const entry of details) queryClient.invalidateQueries({ queryKey: [entry.path, entry.params, null], exact: true });
     }, 750);
     return () => window.clearTimeout(timer);
   }, []);

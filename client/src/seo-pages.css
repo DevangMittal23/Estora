@@ -251,6 +251,7 @@
   margin: 0;
 }
 .seo-editorial-hero img {
+  height: auto;
   width: 100%;
   aspect-ratio: 4 / 4.4;
   object-fit: cover;
@@ -492,6 +493,7 @@
   position: relative;
 }
 .seo-story-image img {
+  height: auto;
   width: 100%;
   aspect-ratio: 1.35;
   object-fit: cover;
@@ -564,6 +566,7 @@
   margin: 0 0 50px;
 }
 .seo-article-image img {
+  height: auto;
   width: 100%;
   max-height: 480px;
   object-fit: cover;
