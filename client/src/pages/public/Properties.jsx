@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { useData, send, useAction } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { propertyId, PUBLIC_PROPERTY_STATUSES } from '../../seo/urls';
+import { trackSeoEvent } from '../../analytics';
 import {
   Button,
   Field,
@@ -78,6 +80,10 @@ export function Landing() {
             src="/assets/estora-residences.webp"
             alt="Illustrative contemporary residences with limestone balconies and landscaped gardens"
             fetchpriority="high"
+            width={1672}
+            height={941}
+            loading="eager"
+            decoding="async"
           />
           <div className="hero-collection-label" aria-hidden="true">
             <span>THE ESTORA PERSPECTIVE</span>
@@ -197,6 +203,85 @@ export function Landing() {
             )
           }
         </QueryState>
+      </section>
+      <section
+        id="free-resources"
+        className="public-section free-resources-section"
+        aria-labelledby="free-resources-title"
+      >
+        <header className="free-resources-heading">
+          <div>
+            <span className="eyebrow">Free tools & guides</span>
+            <h2 id="free-resources-title">
+              A little clarity, before commitment.
+            </h2>
+            <p>
+              Explore the numbers and understand the ownership idea, at your own
+              pace. Start with the question that matters to you.
+            </p>
+          </div>
+          <span className="free-resources-access">Free · No account required</span>
+        </header>
+        <div className="free-resources-entries">
+          <article>
+            <img
+              className="free-resource-art"
+              src="/assets/estora-resource-roi.webp"
+              alt="Concept miniature of a property, calculator and value blocks for comparing investment inputs and outcomes"
+              width={640}
+              height={640}
+              loading="lazy"
+              decoding="async"
+            />
+            <h3>Real estate ROI</h3>
+            <p>
+              Explore how costs, sale proceeds and time shape your scenario.
+            </p>
+            <Link className="text-link" to="/calculators/real-estate-roi">
+              Calculate ROI <ArrowUpRight size={17} aria-hidden="true" />
+            </Link>
+          </article>
+          <article>
+            <img
+              className="free-resource-art"
+              src="/assets/estora-resource-rental-yield.webp"
+              alt="Concept miniature of a residential property with a key, calendar and discs representing rent over time"
+              width={640}
+              height={640}
+              loading="lazy"
+              decoding="async"
+            />
+            <h3>Rental yield</h3>
+            <p>
+              See gross and net annual yield, with your costs in view.
+            </p>
+            <Link className="text-link" to="/calculators/rental-yield">
+              Calculate rental yield <ArrowUpRight size={17} aria-hidden="true" />
+            </Link>
+          </article>
+          <article>
+            <img
+              className="free-resource-art"
+              src="/assets/estora-resource-ownership.webp"
+              alt="Concept miniature of a modular property with one bronze-highlighted share and a divided allocation disc"
+              width={640}
+              height={640}
+              loading="lazy"
+              decoding="async"
+            />
+            <h3>Fractional ownership</h3>
+            <p>
+              Understand your part of a property and the journey to sale.
+            </p>
+            <Link className="text-link" to="/fractional-real-estate">
+              Read the ownership guide <ArrowUpRight size={17} aria-hidden="true" />
+            </Link>
+          </article>
+        </div>
+        <p className="free-resources-note">
+          Educational scenarios, not return forecasts. ESTORA does not
+          distribute rental income.
+        </p>
       </section>
       <section className="ownership-section" aria-labelledby="ownership-title">
         <div className="ownership-intro">
@@ -592,8 +677,11 @@ export function ReturnCalculator({ property: p }) {
   );
 }
 export function PropertyDetail() {
-  const { id } = useParams();
-  const query = useData(`/properties/${id}`, {}, { refetchInterval: 15000 });
+  const { id: reference } = useParams();
+  // Only presentation URLs change. Every protected action still uses its
+  // original immutable database identifier and existing API/authorization.
+  const id = propertyId(reference);
+  const query = useData(`/properties/${id}`, {}, { enabled: !!id, refetchInterval: 15000 });
   const { user } = useAuth();
   const [image, setImage] = useState(0),
     [message, setMessage] = useState('');
@@ -601,11 +689,22 @@ export function PropertyDetail() {
     () => send('post', '/enquiries', { propertyId: id, message }),
     'Your enquiry has been sent'
   );
+  const trackedProperty = useRef(null);
+  useEffect(() => {
+    if (query.data && PUBLIC_PROPERTY_STATUSES.includes(query.data.status) && trackedProperty.current !== query.data._id) {
+      trackedProperty.current = query.data._id;
+      trackSeoEvent('property_view', { page: 'public-property' });
+    }
+  }, [query.data]);
+  if (!id || (query.isError && [403, 404].includes(query.error?.response?.status))) return (
+    <section className="public-section error-page"><h1>Property not available</h1><p>This listing may have moved or may not be publicly available.</p><Link className="button primary" to="/properties">Explore published properties</Link></section>
+  );
   return (
     <section className="public-section detail-page">
       <QueryState query={query}>
         {(p) => (
           <>
+            <nav aria-label="Breadcrumb" className="seo-breadcrumbs"><ol><li><Link to="/">Estora</Link></li><li><Link to="/properties">Properties</Link></li><li><span aria-current="page">{p.title}</span></li></ol></nav>
             <Heading
               eyebrow={`${label(p.type)} · ${p.city}`}
               title={p.title}
@@ -616,7 +715,10 @@ export function PropertyDetail() {
               <PropertyImage
                 className="gallery-main"
                 media={p.images?.[image]}
-                alt={p.title}
+                alt={`${p.title}${p.city ? ` in ${p.city}` : ''}`}
+                publicMedia={PUBLIC_PROPERTY_STATUSES.includes(p.status)}
+                loading="eager"
+                fetchPriority="high"
               />
               <div className="gallery-thumbnails">
                 {p.images?.map((media, i) => (
@@ -629,6 +731,7 @@ export function PropertyDetail() {
                     <PropertyImage
                       media={media}
                       alt={`${p.title} image ${i + 1}`}
+                      publicMedia={PUBLIC_PROPERTY_STATUSES.includes(p.status)}
                     />
                   </button>
                 ))}
@@ -667,11 +770,18 @@ export function PropertyDetail() {
                 </section>
                 <ReturnCalculator property={p} />
                 <section className="panel">
+                  <h2>Understand the investment structure</h2>
+                  <p>The property is divided into {p.totalUnits?.toLocaleString('en-IN')} units. Each purchased unit represents a proportional share; the minimum is {p.minUnits} unit{p.minUnits === 1 ? '' : 's'} at the displayed unit price.</p>
+                  <p>Expected appreciation and rental yield are listing assumptions, not guaranteed returns. Estora’s academic demonstration records funding and sale proceeds; it does not distribute rental income.</p>
+                  <p>The displayed holding period is {p.holdingPeriodMonths} months. Funding must complete before the holding-to-sale workflow; the planned duration does not guarantee an exit date.</p>
+                  <div className="actions wrap"><Link className="text-link" to="/fractional-real-estate">Understand fractional ownership</Link><Link className="text-link" to="/calculators/real-estate-roi">Explore an ROI scenario</Link></div>
+                </section>
+                <section className="panel">
                   <h2>Property documents</h2>
                   <p>
                     Review the supporting information before committing funds.
                   </p>
-                  {p.documents?.length ? (
+                  {p.seoPublic ? <p>Supporting documents are shown in the interactive listing when available. Private documents remain restricted to authorized accounts.</p> : p.documents?.length ? (
                     p.documents.map((doc) => (
                       <MediaLink key={doc.url} media={doc} />
                     ))
@@ -711,6 +821,12 @@ export function PropertyDetail() {
                   >
                     Open location in maps <ArrowUpRight size={17} />
                   </a>
+                </section>
+                <section className="panel">
+                  <h2>Property questions</h2>
+                  <details><summary>Can I explore this listing without an account?</summary><p>Yes. Public listing information can be read without logging in. An account is required for protected actions such as enquiries and investments.</p></details>
+                  <details><summary>What does the funding status mean?</summary><p>The displayed status is {label(p.status).toLowerCase()}. New investments are available only while a property is live, subject to the existing account and identity-verification requirements.</p></details>
+                  <details><summary>Are the displayed projections guaranteed?</summary><p>No. Projections are illustrative. Costs, sale timing and actual sale proceeds can change the outcome. Use test funds only in this academic demonstration.</p></details>
                 </section>
                 {user?.role === 'INVESTOR' && (
                   <section className="panel">

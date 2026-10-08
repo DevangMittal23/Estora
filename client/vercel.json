@@ -1,1 +1,10 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": { "api/seo.js": { "includeFiles": "dist/index.html", "maxDuration": 60 } },
+  "routes": [
+    { "src": "/index\\.html", "status": 308, "headers": { "Location": "/" } },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/seo?route=$1" }
+  ]
+}

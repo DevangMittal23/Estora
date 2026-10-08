@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { RouteScroll } from './components/RouteScroll';
 import { AuthProvider } from './context/AuthContext';
+import { RouteSeo } from './seo/RouteSeo';
+import { FractionalGuide, AboutPage, Insights, InsightArticle, Calculators, CalculatorPage, CityInvestmentPage } from './pages/public/SeoPages';
+import { cities } from './seo/cities';
 import { SessionLayout } from './layouts/Layouts';
 import { ProtectedRoute, RoleRoute, BrokerGuard } from './routes/Guards';
 import {
@@ -11,41 +14,48 @@ import {
   PropertyDetail,
 } from './pages/public/Properties';
 import { AuthPage } from './pages/public/Auth';
-import { InvestorDashboard, Portfolio } from './pages/investor/Portfolio';
-import { Checkout } from './pages/investor/Checkout';
-import { Wallet, Ledger } from './pages/investor/Wallet';
-import { KYC } from './pages/investor/KYC';
-import {
-  Enquiries,
-  Notifications,
-  Profile,
-  ErrorPage,
-} from './pages/shared/Shared';
-import {
-  BrokerDashboard,
-  BrokerProperties,
-  BrokerAnalytics,
-} from './pages/broker/Broker';
-import { Wizard } from './pages/broker/Wizard';
-import {
-  AdminDashboard,
-  AdminProperties,
-  Users,
-  KYCQueue,
-  Withdrawals,
-  Settings,
-} from './pages/admin/Admin';
-import { Sale } from './pages/admin/Sale';
+const page = (load, name) => lazy(() => load().then((module) => ({ default: module[name] })));
+const InvestorDashboard = page(() => import('./pages/investor/Portfolio'), 'InvestorDashboard');
+const Portfolio = page(() => import('./pages/investor/Portfolio'), 'Portfolio');
+const Checkout = page(() => import('./pages/investor/Checkout'), 'Checkout');
+const Wallet = page(() => import('./pages/investor/Wallet'), 'Wallet');
+const Ledger = page(() => import('./pages/investor/Wallet'), 'Ledger');
+const KYC = page(() => import('./pages/investor/KYC'), 'KYC');
+const Enquiries = page(() => import('./pages/shared/Shared'), 'Enquiries');
+const Notifications = page(() => import('./pages/shared/Shared'), 'Notifications');
+const Profile = page(() => import('./pages/shared/Shared'), 'Profile');
+const ErrorPage = page(() => import('./pages/shared/Shared'), 'ErrorPage');
+const BrokerDashboard = page(() => import('./pages/broker/Broker'), 'BrokerDashboard');
+const BrokerProperties = page(() => import('./pages/broker/Broker'), 'BrokerProperties');
+const BrokerAnalytics = page(() => import('./pages/broker/Broker'), 'BrokerAnalytics');
+const Wizard = page(() => import('./pages/broker/Wizard'), 'Wizard');
+const AdminDashboard = page(() => import('./pages/admin/Admin'), 'AdminDashboard');
+const AdminProperties = page(() => import('./pages/admin/Admin'), 'AdminProperties');
+const Users = page(() => import('./pages/admin/Admin'), 'Users');
+const KYCQueue = page(() => import('./pages/admin/Admin'), 'KYCQueue');
+const Withdrawals = page(() => import('./pages/admin/Admin'), 'Withdrawals');
+const Settings = page(() => import('./pages/admin/Admin'), 'Settings');
+const Sale = page(() => import('./pages/admin/Sale'), 'Sale');
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <RouteScroll />
+        <RouteSeo />
+        <Suspense fallback={<div className="skeleton-stack" role="status" aria-label="Loading page"><div className="skeleton" /></div>}>
         <Routes>
           <Route element={<SessionLayout />}>
             <Route path="/" element={<Landing />} />
             <Route path="/properties" element={<Marketplace />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
+            <Route path="/fractional-real-estate" element={<FractionalGuide />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/insights/:slug" element={<InsightArticle />} />
+            <Route path="/calculators" element={<Calculators />} />
+            <Route path="/calculators/real-estate-roi" element={<CalculatorPage />} />
+            <Route path="/calculators/rental-yield" element={<CalculatorPage />} />
+            {cities.map((city) => <Route key={city.slug} path={`/real-estate-investment-in-${city.slug}`} element={<CityInvestmentPage />} />)}
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage mode="signup" />} />
             <Route
@@ -118,6 +128,7 @@ export default function App() {
             </Route>
           </Route>
         </Routes>
+        </Suspense>
         <Toaster
           position="top-right"
           toastOptions={{

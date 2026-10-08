@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
@@ -9,22 +9,10 @@ import {
   Check,
   ArrowRight,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  BarChart,
-  Bar,
-} from 'recharts';
+
 import { api, apiOrigin, errorMessage } from '../api';
-import { money, compactMoney, pct, label } from '../utils';
+import { money, pct, label } from '../utils';
+import { propertyPath, PUBLIC_PROPERTY_STATUSES } from '../seo/urls';
 import toast from 'react-hot-toast';
 export function Button({
   children,
@@ -364,13 +352,20 @@ export function PropertyImage({
   media,
   className = '',
   alt = 'Architectural illustration',
+  publicMedia = false,
+  loading = 'lazy',
+  fetchPriority = 'auto',
 }) {
-  const [url, setUrl] = useState('/architecture.svg');
+  const initialUrl = media?.url?.startsWith('/api/v1/media/')
+    ? publicMedia ? `${apiOrigin}${media.url}` : '/architecture.svg'
+    : media?.url || '/architecture.svg';
+  const [url, setUrl] = useState(initialUrl);
   useEffect(() => {
     let alive = true;
     let blobUrl;
     setUrl('/architecture.svg');
-    if (media?.url?.startsWith('/api/v1/media/')) {
+    if (publicMedia && media?.url?.startsWith('/api/v1/media/')) setUrl(`${apiOrigin}${media.url}`);
+    else if (media?.url?.startsWith('/api/v1/media/')) {
       api
         .get(media.url.replace('/api/v1', ''), { responseType: 'blob' })
         .then((response) => {
@@ -383,12 +378,17 @@ export function PropertyImage({
       alive = false;
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [media?.url]);
+  }, [media?.url, publicMedia]);
   return (
     <img
       className={className}
       src={url}
-      alt={alt}
+      alt={media?.url ? alt : 'Illustrative architecture; no property image supplied'}
+      width={1200}
+      height={800}
+      loading={loading}
+      fetchpriority={fetchPriority}
+      decoding="async"
       onError={() => setUrl('/architecture.svg')}
     />
   );
@@ -464,8 +464,8 @@ export function MediaLink({ media }) {
 export function PropertyCard({ property: p }) {
   return (
     <article className="property-card">
-      <Link to={`/properties/${p._id}`} className="property-image">
-        <PropertyImage media={p.images?.[0]} alt={p.title} />
+      <Link to={propertyPath(p)} className="property-image">
+        <PropertyImage media={p.images?.[0]} alt={`${p.title}${p.city ? ` in ${p.city}` : ''}`} publicMedia={PUBLIC_PROPERTY_STATUSES.includes(p.status)} />
         <Chip status={p.status} />
         <span className="image-type">{label(p.type)}</span>
       </Link>
@@ -474,7 +474,7 @@ export function PropertyCard({ property: p }) {
           {p.city} · {p.areaSqft?.toLocaleString('en-IN')} sq ft
         </span>
         <h3>
-          <Link to={`/properties/${p._id}`}>{p.title}</Link>
+          <Link to={propertyPath(p)}>{p.title}</Link>
         </h3>
         <div className="property-numbers">
           <div>
@@ -495,180 +495,23 @@ export function PropertyCard({ property: p }) {
           </span>
           <span>{p.holdingPeriodMonths} month hold</span>
         </div>
-        <Link className="text-link" to={`/properties/${p._id}`}>
+        <Link className="text-link" to={propertyPath(p)}>
           Explore property <ArrowRight size={17} />
         </Link>
       </div>
     </article>
   );
 }
-const colors = [
-  '#073b35',
-  '#b8893d',
-  '#738d76',
-  '#a37349',
-  '#ab9b71',
-  '#4f7d70',
-];
-const chartTooltipStyle = {
-  background: '#fffdf8',
-  border: '1px solid #ddd3c4',
-  borderRadius: 8,
-  color: '#171717',
-  fontSize: 13,
-  boxShadow: '0 8px 24px #0b292615',
-};
-export function Allocation({ items = [] }) {
-  if (!items.length)
-    return (
-      <Empty
-        title="Your portfolio starts with one property"
-        description="Explore the marketplace to find your first investment."
-        action={
-          <Link className="button primary" to="/properties">
-            Explore properties
-          </Link>
-        }
-      />
-    );
-  return (
-    <div className="allocation">
-      <div className="chart">
-        <ResponsiveContainer width="100%" height={260}>
-          <PieChart>
-            <Pie
-              data={items}
-              dataKey="investedAmount"
-              nameKey="title"
-              innerRadius={72}
-              outerRadius={105}
-              paddingAngle={3}
-              stroke="#fffdf8"
-              isAnimationActive={false}
-            >
-              {items.map((p, i) => (
-                <Cell
-                  key={`${p.propertyId}-${i}`}
-                  fill={colors[i % colors.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={chartTooltipStyle}
-              formatter={(value) => money(value)}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div>
-        {items.map((p, i) => (
-          <div className="allocation-legend" key={`${p.propertyId}-${i}`}>
-            <i style={{ background: colors[i % colors.length] }} />
-            <div>
-              <strong>{p.title}</strong>
-              <small>
-                {pct(p.ownershipPct)} ownership ·{' '}
-                {p.investmentStatus === 'EXITED' || p.status === 'SOLD'
-                  ? 'Exited position'
-                  : 'Active holding'}
-              </small>
-            </div>
-            <span>{compactMoney(p.investedAmount)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+const LazyAllocation = lazy(() => import('./charts').then((module) => ({ default: module.Allocation })));
+const LazyDataChart = lazy(() => import('./charts').then((module) => ({ default: module.DataChart })));
+function ChartLoading() {
+  return <div className="chart" style={{ minHeight: 280 }} role="status" aria-label="Loading chart"><div className="skeleton" /></div>;
 }
-export function DataChart({
-  data = [],
-  x = 'month',
-  y = 'amount',
-  bar = false,
-  moneyValues = true,
-}) {
-  if (!data.length)
-    return (
-      <Empty
-        title="No chart activity yet"
-        description="Recorded activity will populate this chart."
-      />
-    );
-  const Chart = bar ? BarChart : LineChart;
-  return (
-    <div className="chart">
-      <ResponsiveContainer
-        width="100%"
-        height={bar ? Math.max(280, data.length * 38) : 280}
-      >
-        <Chart
-          data={data}
-          layout={bar ? 'vertical' : 'horizontal'}
-          margin={{ top: 12, right: 18, bottom: 8, left: 0 }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={bar}
-            horizontal={!bar}
-            stroke="#ddd3c4"
-          />
-          <XAxis
-            dataKey={bar ? undefined : x}
-            type={bar ? 'number' : 'category'}
-            allowDecimals={!bar}
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-            minTickGap={28}
-          />
-          <YAxis
-            dataKey={bar ? x : undefined}
-            type={bar ? 'category' : 'number'}
-            tickFormatter={(v) =>
-              bar ? label(v) : moneyValues ? compactMoney(v) : v
-            }
-            width={bar ? 112 : 88}
-            interval={bar ? 0 : 'preserveStartEnd'}
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            contentStyle={chartTooltipStyle}
-            labelFormatter={(v) => (bar ? label(v) : v)}
-            formatter={(v) => [moneyValues ? money(v) : v, label(y)]}
-            cursor={bar ? { fill: '#102b3e08' } : { stroke: '#b8893d' }}
-          />
-          {bar ? (
-            <Bar
-              dataKey={y}
-              fill="#073b35"
-              radius={[0, 3, 3, 0]}
-              barSize={17}
-              isAnimationActive={false}
-            />
-          ) : (
-            <Line
-              type="monotone"
-              dataKey={y}
-              stroke="#073b35"
-              strokeWidth={2.5}
-              dot={
-                data.length === 1
-                  ? { r: 4, fill: '#073b35', stroke: '#fffdf8', strokeWidth: 2 }
-                  : false
-              }
-              activeDot={{ r: 5, stroke: '#fffdf8', strokeWidth: 2 }}
-              isAnimationActive={false}
-            />
-          )}
-        </Chart>
-      </ResponsiveContainer>
-      {!bar && data.length === 1 && (
-        <p className="chart-caption">One recorded period so far.</p>
-      )}
-    </div>
-  );
+export function Allocation(props) {
+  return <Suspense fallback={<ChartLoading />}><LazyAllocation {...props} /></Suspense>;
+}
+export function DataChart(props) {
+  return <Suspense fallback={<ChartLoading />}><LazyDataChart {...props} /></Suspense>;
 }
 export function Success({ title, description, action }) {
   return (

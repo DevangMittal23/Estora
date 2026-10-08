@@ -35,7 +35,7 @@ export const send = async (method, path, body) =>
   (await api[method](path, body)).data.data;
 export function useData(path, params = {}, options = {}) {
   return useQuery({
-    queryKey: [path, params, getToken()],
+    queryKey: [path, params, import.meta.env.SSR ? null : getToken()],
     queryFn: ({ signal }) => get(path, params, { signal }),
     ...options,
   });

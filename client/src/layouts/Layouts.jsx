@@ -86,6 +86,11 @@ export function Footer() {
           <Link to="/properties">Property marketplace</Link>
           <a href="/#how-it-works">How fractional ownership works</a>
           <a href="/#faq">Questions & answers</a>
+          <Link to="/fractional-real-estate">Fractional real estate guide</Link>
+          <Link to="/insights">Insights</Link>
+          <Link to="/calculators">Investment calculators</Link>
+          <Link to="/real-estate-investment-in-lucknow">Explore Lucknow</Link>
+          <Link to="/about">About ESTORA</Link>
         </div>
         <div>
           <h2>Your next step</h2>
